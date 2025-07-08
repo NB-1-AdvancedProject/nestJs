@@ -18,9 +18,30 @@ import { ReplyModule } from './reply/reply.module';
 import { ReviewModule } from './review/review.module';
 import { FavoriteStoreModule } from './favorite-store/favorite-store.module';
 import { AlarmModule } from './alarm/alarm.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { typeORMConfig } from './configs/typeorm.config';
 
 @Module({
-  imports: [UserModule, GradeModule, StoreModule, ProductModule, StockModule, SizeModule, CategoryModule, OrderModule, OrderItemModule, PaymentModule, CartModule, CartItemModule, InquiryModule, ReplyModule, ReviewModule, FavoriteStoreModule, AlarmModule],
+  imports: [
+    TypeOrmModule.forRoot(typeORMConfig),
+    UserModule,
+    GradeModule,
+    StoreModule,
+    ProductModule,
+    StockModule,
+    SizeModule,
+    CategoryModule,
+    OrderModule,
+    OrderItemModule,
+    PaymentModule,
+    CartModule,
+    CartItemModule,
+    InquiryModule,
+    ReplyModule,
+    ReviewModule,
+    FavoriteStoreModule,
+    AlarmModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
