@@ -39,5 +39,6 @@ export class Reply {
   inquiry: Inquiry;
 
   @ManyToOne(() => User, (user) => user.replies)
+  @JoinColumn({ name: 'userId' })
   user: User;
 }
