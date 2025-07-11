@@ -73,7 +73,6 @@ export class User {
   @DeleteDateColumn()
   deletedAt?: Date;
 
-  // Relations
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 
