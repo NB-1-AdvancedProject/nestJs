@@ -44,11 +44,8 @@
     "@nestjs/testing": "^11.0.1",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.10.7",
-<<<<<<< HEAD
     "@types/eventsource": "^1.1.15",
-=======
     "@types/bcrypt": "^5.0.2",
->>>>>>> ffb3cb6356d92dfa7807fee7e15558f23bcc6970
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.7",
