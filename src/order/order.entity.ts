@@ -7,7 +7,6 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
-  JoinColumn,
 } from 'typeorm';
 import { User } from '../user/user.entity';
 import { OrderItem } from '../order-item/order-item.entity';

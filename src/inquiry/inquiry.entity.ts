@@ -6,6 +6,7 @@ import {
   OneToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { Product } from '../product/product.entity';
 import { User } from '../user/user.entity';
@@ -48,9 +49,11 @@ export class Inquiry {
   @ManyToOne(() => Product, (product) => product.inquiries, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'productId' })
   product: Product;
 
   @ManyToOne(() => User, (user) => user.inquiries)
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @OneToOne(() => Reply, (reply) => reply.inquiry)
