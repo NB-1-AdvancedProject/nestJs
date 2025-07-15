@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -19,6 +20,7 @@ import { PageParamDTO } from 'src/lib/commonDTO/page-param.dto';
 import { MyStoreProductListDTO } from './dto/response/my-store-product-list.dto';
 import { UserId } from 'src/lib/decorators/userId.decorator';
 import { MyStoreDTO } from './dto/response/my-store.dto';
+import { UpdateStoreDTO } from './dto/request/update-store.dto';
 
 @Controller('/api/stores')
 export class StoreController {
@@ -26,7 +28,7 @@ export class StoreController {
 
   @Post('/')
   // 정은: Passport 사용한다면 AuthGuard 붙이기
-  @UsePipes(ValidationPipe)
+  @UsePipes(new ValidationPipe({ transform: true }))
   async createStore(
     @Body() createStoreDTO: CreateStoreDTO,
     // @UserId() userId: string, // 정은: 인증인가 구현시 전반적 수정 필요..!!
@@ -63,5 +65,19 @@ export class StoreController {
   async getMyStoreInfo(@UserId() userId: string): Promise<MyStoreDTO> {
     const result = await this.storeService.getMyStoreInfo(userId);
     return result;
+  }
+
+  @Patch('/:id')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async updateMyStore(
+    @UserId() userId: string,
+    @Param('id', new ParseUUIDPipe()) storeId: string,
+    @Body() updateStoreDTO: UpdateStoreDTO,
+  ) {
+    const result = await this.storeService.updateMyStore(
+      updateStoreDTO,
+      userId,
+      storeId,
+    );
   }
 }

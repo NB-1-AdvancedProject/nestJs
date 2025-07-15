@@ -21,6 +21,7 @@ import { Product } from 'src/product/product.entity';
 import { FavoriteStoreService } from 'src/favorite-store/favorite-store.service';
 import { MyStoreDTO } from './dto/response/my-store.dto';
 import { StoreModule } from './store.module';
+import { UpdateStoreDTO } from './dto/request/update-store.dto';
 
 @Injectable()
 export class StoreService {
@@ -116,5 +117,23 @@ export class StoreService {
       favoriteCount,
       monthFavoriteCount,
     });
+  }
+
+  async updateMyStore(
+    updateStoreDTO: UpdateStoreDTO,
+    storeId: string,
+    userId: string,
+  ): Promise<StoreResDTO> {
+    const store = await this.storeRepository.findOneBy({ id: storeId });
+    if (!store) {
+      throw new NotFoundException(`Store with id ${storeId} does not exist`);
+    }
+    if (userId !== store.userId) {
+      throw new UnauthorizedException();
+    }
+    Object.assign(store, updateStoreDTO);
+    const saved = await this.storeRepository.save(store);
+
+    return plainToInstance(StoreResDTO, saved);
   }
 }
