@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -92,6 +93,15 @@ export class StoreController {
       userId,
       storeId,
     );
+    return result;
+  }
+
+  @Delete('/:id/favorite')
+  async deleteFavoriteStore(
+    @UserId() userId: string,
+    @Param('id', new ParseUUIDPipe()) storeId: string,
+  ): Promise<FavoriteStoreResDTO> {
+    const result = await this.storeService.deleteFavoriteStore(userId, storeId);
     return result;
   }
 }

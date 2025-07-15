@@ -151,14 +151,35 @@ export class StoreService {
       throw new ConflictException('Already liked store');
     }
 
-    const newFavoriteStore = this.favoriteStoreService.register({
+    const newFavoriteStore = await this.favoriteStoreService.register({
       storeId,
       userId,
     });
 
     return plainToInstance(FavoriteStoreResDTO, {
       type: FavoriteStoreType.register,
-      store: newFavoriteStore,
+      store: newFavoriteStore.store,
+    });
+  }
+
+  async deleteFavoriteStore(
+    userId: string,
+    storeId: string,
+  ): Promise<FavoriteStoreResDTO> {
+    const existingFavoriteStore =
+      await this.favoriteStoreService.getByStoreIdAndUserId(storeId, userId);
+    if (!existingFavoriteStore) {
+      throw new NotFoundException(`You never liked this store`);
+    }
+
+    await this.favoriteStoreService.delete({
+      storeId,
+      userId,
+    });
+
+    return plainToInstance(FavoriteStoreResDTO, {
+      type: FavoriteStoreType.delete,
+      store: existingFavoriteStore.store,
     });
   }
 }

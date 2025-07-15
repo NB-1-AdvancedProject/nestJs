@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FavoriteStore } from './favorite-store.entity';
 import { MoreThan, Repository } from 'typeorm';
@@ -23,6 +23,14 @@ export class FavoriteStoreService {
     });
   }
 
+  async getByStoreIdAndUserId(
+    storeId: string,
+    userId: string,
+  ): Promise<FavoriteStore> {
+    return await this.favoriteStoreRepository.findOneOrFail({
+      where: { storeId, userId },
+    });
+  }
   async countMonthFavoriteStore(storeId: string): Promise<number> {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -41,5 +49,16 @@ export class FavoriteStoreService {
   }): Promise<FavoriteStore> {
     const favoriteStore = this.favoriteStoreRepository.create(data);
     return await this.favoriteStoreRepository.save(favoriteStore);
+  }
+
+  async delete(data: { storeId: string; userId: string }): Promise<void> {
+    const { userId, storeId } = data;
+    const deletedResult = await this.favoriteStoreRepository.delete({
+      userId,
+      storeId,
+    });
+    if (deletedResult.affected === 0) {
+      throw new NotFoundException(`FavoriteStore does not exist`);
+    }
   }
 }
