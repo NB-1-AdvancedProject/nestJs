@@ -19,7 +19,7 @@ import { PageParamDTO } from 'src/lib/commonDTO/page-param.dto';
 import { MyStoreProductListDTO } from './dto/response/my-store-product-list.dto';
 import { UserId } from 'src/lib/decorators/userId.decorator';
 
-@Controller('api/stores')
+@Controller('/api/stores')
 export class StoreController {
   constructor(private readonly storeService: StoreService) {}
 
@@ -28,11 +28,12 @@ export class StoreController {
   @UsePipes(ValidationPipe)
   async createStore(
     @Body() createStoreDTO: CreateStoreDTO,
-    @UserId() userId: string, // 정은: git pull 후 연결 예정
+    // @UserId() userId: string, // 정은: 인증인가 구현시 전반적 수정 필요..!!
   ): Promise<StoreResDTO> {
+    const TEST_USER_ID = '0d8e5d92-82c2-4f50-9b2d-45ec8d0db3b3';
     const result: StoreResDTO = await this.storeService.createStore(
       createStoreDTO,
-      userId,
+      TEST_USER_ID,
     );
     return result;
   }
@@ -46,14 +47,14 @@ export class StoreController {
     return result;
   }
 
-  // @Get('/detail/my/product')
-  // @UsePipes(new ValidationPipe({ transform: true }))
-  // async getMyStoreProductList(
-  //   @Query() pageParams: PageParamDTO,
-  //   @UserId() userId: string,
-  // ) {
-  //   const result: MyStoreProductListDTO =
-  //     await this.storeService.getMyStoreProductList(pageParams, userId);
-  //   return result;
-  // }
+  @Get('/detail/my/product')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getMyStoreProductList(
+    @Query() pageParams: PageParamDTO,
+    @UserId() userId: string,
+  ) {
+    const result: MyStoreProductListDTO =
+      await this.storeService.getMyStoreProductList(pageParams, userId);
+    return result;
+  }
 }

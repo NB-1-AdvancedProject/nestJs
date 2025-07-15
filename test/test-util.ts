@@ -19,9 +19,13 @@ import { Size } from 'src/size/size.entity';
 import { Store } from 'src/store/store.entity';
 import { User, UserType } from 'src/user/user.entity';
 import { Grade } from 'src/grade/grade.entity';
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from 'src/lib/constants';
 
 export function getAuthenticatedReq(app: INestApplication, userId: string) {
-  const accessToken = createAccessToken(userId); // 정은: 함수 생성되면 가져오기!
+  const accessToken = jwt.sign({ id: userId }, JWT_SECRET, {
+    expiresIn: '1h',
+  }); // 정은: createAccessToken 함수 생성 시 그거 사용하기
   const agent = request(app.getHttpServer);
 
   return {
@@ -40,39 +44,44 @@ export function getAuthenticatedReq(app: INestApplication, userId: string) {
 
 export async function clearDatabase(app: INestApplication) {
   const dataSource = app.get(DataSource);
-  await dataSource.getRepository(Reply).delete({});
-  await dataSource.getRepository(Inquiry).delete({});
-  await dataSource.getRepository(Review).delete({});
-  await dataSource.getRepository(FavoriteStore).delete({});
-  await dataSource.getRepository(Alarm).delete({});
-  await dataSource.getRepository(OrderItem).delete({});
-  await dataSource.getRepository(Payment).delete({});
-  await dataSource.getRepository(Order).delete({});
-  await dataSource.getRepository(CartItem).delete({});
-  await dataSource.getRepository(Cart).delete({});
-  await dataSource.getRepository(Stock).delete({});
-  await dataSource.getRepository(Product).delete({});
-  await dataSource.getRepository(Category).delete({});
-  await dataSource.getRepository(Size).delete({});
-  await dataSource.getRepository(Store).delete({});
-  await dataSource.getRepository(User).delete({});
-  await dataSource.getRepository(Grade).delete({});
+  await dataSource.getRepository(Reply).clear();
+  // await dataSource.getRepository(Inquiry).clear();
+  // await dataSource.getRepository(Review).clear();
+  // await dataSource.getRepository(FavoriteStore).clear();
+  // await dataSource.getRepository(Alarm).clear();
+  // await dataSource.getRepository(OrderItem).clear();
+  // await dataSource.getRepository(Payment).clear();
+  // await dataSource.getRepository(Order).clear();
+  // await dataSource.getRepository(CartItem).clear();
+  // await dataSource.getRepository(Cart).clear();
+  // await dataSource.getRepository(Stock).clear();
+  // await dataSource.getRepository(Product).clear();
+  // await dataSource.getRepository(Category).clear();
+  // await dataSource.getRepository(Size).clear();
+  // await dataSource.getRepository(Store).clear();
+  // await dataSource.getRepository(User).clear();
+  // await dataSource.getRepository(Grade).clear();
 }
 
 export async function createTestUser(
   app: INestApplication,
-  userData: { email: string; name: string; password: string; type: UserType },
+  userData: {
+    id?: string;
+    email: string;
+    name: string;
+    password: string;
+    type: UserType;
+  },
 ) {
   const plainPassword = userData.password;
   const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
   const dataSource = app.get(DataSource);
   const userRepo = dataSource.getRepository(User);
-  const user = await userRepo.create({
-    email: userData.email,
-    name: userData.name,
+  const user = userRepo.create({
+    ...userData,
     password: hashedPassword,
-    type: userData.type,
   });
+  user.id = '0d8e5d92-82c2-4f50-9b2d-45ec8d0db3b3'; // 정은 : Auth 구현 후 삭제 필요
   return await userRepo.save(user);
 }

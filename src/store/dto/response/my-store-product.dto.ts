@@ -11,7 +11,7 @@ export class MyStoreProductDTO {
   @Expose()
   price: number;
   @Expose()
-  stocks: Stock[];
+  stock: number;
   @Expose()
   isDiscount: boolean;
   @Expose()

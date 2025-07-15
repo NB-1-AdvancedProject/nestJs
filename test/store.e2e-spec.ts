@@ -7,7 +7,7 @@ import { testTypeORMConfig } from 'src/configs/test-typeorm.config';
 import { FavoriteStoreModule } from 'src/favorite-store/favorite-store.module';
 import { ProductModule } from 'src/product/product.module';
 import { CreateStoreDTO } from 'src/store/dto/request/create-store.dto';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { User, UserType } from 'src/user/user.entity';
 import {
   clearDatabase,
@@ -29,15 +29,27 @@ describe('StoreController (e2e)', () => {
       ],
     }).compile();
 
-    beforeEach(async () => {
-      await clearDatabase(app);
-    });
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe());
+    app.use((req, res, next) => {
+      console.log(`📥 ${req.method} ${req.url}`);
+      next();
+    });
     await app.init();
   });
 
+  beforeEach(async () => {
+    await clearDatabase(app);
+  });
   afterAll(async () => {
+    const dataSource = app.get(DataSource);
+
+    if (dataSource.isInitialized) {
+      await dataSource.destroy();
+    }
+    const httpServer = app.getHttpServer();
+    if (httpServer && httpServer.close) {
+      httpServer.close();
+    }
     await app.close();
   });
   describe('POST /api/stores', () => {
@@ -50,8 +62,8 @@ describe('StoreController (e2e)', () => {
         content: '좋은 찜질방이에요~',
       };
 
-      const response = await getAuthenticatedReq(app, seller.id)
-        .post('/store')
+      const response = await request(app.getHttpServer())
+        .post('/api/stores')
         .send(createStoreDTO);
 
       expect(response.status).toBe(201);
