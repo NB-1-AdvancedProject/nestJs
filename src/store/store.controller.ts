@@ -19,7 +19,7 @@ import { PageParamDTO } from 'src/lib/commonDTO/page-param.dto';
 import { MyStoreProductListDTO } from './dto/response/my-store-product-list.dto';
 import { UserId } from 'src/lib/decorators/userId.decorator';
 
-@Controller('store')
+@Controller('api/stores')
 export class StoreController {
   constructor(private readonly storeService: StoreService) {}
 

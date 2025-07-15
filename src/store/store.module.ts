@@ -8,12 +8,14 @@ import { FavoriteStoreService } from 'src/favorite-store/favorite-store.service'
 import { FavoriteStoreModule } from 'src/favorite-store/favorite-store.module';
 import { ProductService } from 'src/product/product.service';
 import { ProductModule } from 'src/product/product.module';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Store, User]),
     FavoriteStoreModule,
     ProductModule,
+    // UserModule,
   ],
   controllers: [StoreController],
   providers: [StoreService],
