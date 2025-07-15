@@ -1,6 +1,9 @@
 import {
   Body,
   Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
   Post,
   UseGuards,
   UsePipes,
@@ -10,6 +13,7 @@ import { StoreService } from './store.service';
 import { CreateStoreDTO } from './dto/create-store.dto';
 import { Store } from './store.entity';
 import { StoreResDTO } from './dto/store-res.dto';
+import { StoreWithFavoriteCountDTO } from './dto/store-with-favorite-count.dto';
 
 @Controller('store')
 export class StoreController {
@@ -26,6 +30,16 @@ export class StoreController {
       createStoreDTO,
       userId,
     );
+    return result;
+  }
+
+  @Get('/:id')
+  @UsePipes(ValidationPipe)
+  async getStoreInfo(
+    @Param('id', new ParseUUIDPipe()) storeId: string,
+  ): Promise<StoreWithFavoriteCountDTO> {
+    const result: StoreWithFavoriteCountDTO =
+      await this.storeService.getStoreInfo(storeId);
     return result;
   }
 }

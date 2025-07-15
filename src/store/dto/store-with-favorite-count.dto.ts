@@ -1,6 +1,6 @@
 import { Expose, Transform } from 'class-transformer';
 
-export class StoreResDTO {
+export class StoreWithFavoriteCountDTO {
   @Expose()
   id: string;
   @Expose()
@@ -20,4 +20,6 @@ export class StoreResDTO {
   @Expose()
   @Transform(({ value }) => value ?? '')
   image: string;
+  @Expose()
+  favoriteCount: number;
 }
