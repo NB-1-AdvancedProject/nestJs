@@ -9,16 +9,16 @@ import {
 import { User } from 'src/user/user.entity';
 import { Store } from 'src/store/store.entity';
 import { NotFoundException } from '@nestjs/common';
+import { UserService } from 'src/user/user.service';
+import { StoreService } from 'src/store/store.service';
 
 @Injectable()
 export class InquiryService {
   constructor(
     @InjectRepository(Inquiry)
     private readonly inquiryRepository: Repository<Inquiry>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-    @InjectRepository(Store)
-    private readonly StoreRepository: Repository<Store>,
+    private readonly userService: UserService,
+    private readonly StoreService: StoreService,
   ) {}
 
   async getList(query: reqGetMyInquiryDto, userId: string) {
@@ -46,18 +46,14 @@ export class InquiryService {
     let storeUser: Store | null = null;
 
     if (userId !== undefined) {
-      userData = await this.userRepository.findOne({
-        where: { id: userId },
-      });
+      userData = await this.userService.userFindId(userId);
 
       if (!userData) {
         throw new NotFoundException('유저를 찾을 수 없습니다.');
       }
 
       if (userData.storeId) {
-        storeUser = await this.StoreRepository.findOne({
-          where: { id: userData.storeId },
-        });
+        storeUser = await this.StoreService.storeFindId(userData.storeId);
       }
     }
 
