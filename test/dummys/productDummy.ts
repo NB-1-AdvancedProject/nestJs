@@ -1,7 +1,7 @@
 import { UserType } from 'src/user/user.entity';
-import { InquiryStatus } from './inquiry/inquiry.entity';
-import { OrderStatus } from './order/order.entity';
-import { PaymentStatus } from './payment/payment.entity';
+import { InquiryStatus } from '../../src/inquiry/inquiry.entity';
+import { OrderStatus } from '../../src/order/order.entity';
+import { PaymentStatus } from '../../src/payment/payment.entity';
 
 const sellerUserId = '00000000-0000-0000-0000-000000000001';
 const buyerUserId = '00000000-0000-0000-0000-000000000002';
@@ -21,14 +21,14 @@ const cartId = '13000000-0000-0000-0000-000000000013';
 const cartItemId = '14000000-0000-0000-0000-000000000014';
 const alarmId = '15000000-0000-0000-0000-000000000015';
 
-export const grade = {
+export const dummyGrade = {
   id: gradeId,
   name: '골드',
   pointRate: 5,
   minAmount: '300000', // decimal이니까 string으로
 };
 
-export const user1 = {
+export const dummyUser1 = {
   id: sellerUserId,
   email: 'testuser1@example.com',
   password: 'password1',
@@ -42,7 +42,7 @@ export const user1 = {
   totalAmount: 500000,
 };
 
-export const user2 = {
+export const dummyUser2 = {
   id: buyerUserId,
   email: 'testuser2@example.com',
   password: 'password2',
@@ -56,7 +56,7 @@ export const user2 = {
   totalAmount: 5000000,
 };
 
-export const store = {
+export const dummyStore = {
   id: storeId,
   name: '강남 본점',
   address: '서울시 강남구 테헤란로 123',
@@ -66,7 +66,7 @@ export const store = {
   image: 'https://example.com/store-image.jpg',
 };
 
-export const product = {
+export const dummyProduct = {
   id: productId,
   name: '샘플 상품',
   price: '19900',
@@ -84,25 +84,25 @@ export const product = {
   isSoldOut: false,
 };
 
-export const category = {
+export const dummyCategory = {
   id: categoryId,
   name: '과일',
   description: '신선한 과일을 판매하는 카테고리입니다.',
 };
 
-export const size = {
+export const dummySize = {
   id: sizeId,
   size: 'S',
 };
 
-export const stock = {
+export const dummyStock = {
   id: stockId,
   productId: productId,
   sizeId: sizeId,
   quantity: 10,
 };
 
-export const inquiry = {
+export const dummyInquiry = {
   id: inquiryId,
   productId: productId,
   userId: buyerUserId,
@@ -112,7 +112,7 @@ export const inquiry = {
   status: InquiryStatus.completedAnswer,
 };
 
-export const reply = {
+export const dummyReply = {
   id: replyId,
   inquiryId: inquiryId,
   userId: sellerUserId,
@@ -120,7 +120,7 @@ export const reply = {
   isChecked: true,
 };
 
-export const order = {
+export const dummyOrder = {
   id: orderId,
   userId: buyerUserId,
   name: '홍길동',
@@ -132,7 +132,7 @@ export const order = {
   paidAt: new Date(),
 };
 
-export const orderItem = {
+export const dummyOrderItem = {
   id: orderItemId,
   orderId: orderId,
   productId: productId,
@@ -141,14 +141,14 @@ export const orderItem = {
   price: '39800',
 };
 
-export const payment = {
+export const dummyPayment = {
   id: paymentId,
   orderId: orderId,
   status: PaymentStatus.CompletedPayment,
   totalPrice: '28900',
 };
 
-export const review = {
+export const dummyReview = {
   id: reviewId,
   productId: productId,
   orderItemId: orderItemId,
@@ -157,12 +157,12 @@ export const review = {
   rating: 4.5,
 };
 
-export const cart = {
+export const dummyCart = {
   id: cartId,
   userId: buyerUserId,
 };
 
-export const cartItem = {
+export const dummyCartItem = {
   id: cartItemId,
   cartId: cartId,
   productId: productId,
@@ -170,12 +170,12 @@ export const cartItem = {
   quantity: 2,
 };
 
-export const favoriteStore = {
+export const dummyFavoriteStore = {
   userId: buyerUserId,
   storeId: storeId,
 };
 
-export const alarm = {
+export const dummyAlarm = {
   id: alarmId,
   userId: buyerUserId,
   content: '주문이 정상 처리되었습니다.',

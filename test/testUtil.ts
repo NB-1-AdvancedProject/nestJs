@@ -1,42 +1,22 @@
 import * as bcrypt from 'bcrypt';
-import { AppDataSource } from './configs/data-source';
-import {
-  cart,
-  cartItem,
-  category,
-  favoriteStore,
-  grade,
-  inquiry,
-  order,
-  orderItem,
-  payment,
-  product,
-  reply,
-  review,
-  size,
-  stock,
-  store,
-  user1,
-  user2,
-} from './mock';
-import { Grade } from './grade/grade.entity';
-import { User } from './user/user.entity';
+import { Grade } from '../src/grade/grade.entity';
+import { User } from '../src/user/user.entity';
 import { DataSource, DeepPartial } from 'typeorm';
-import { Store } from './store/store.entity';
-import { Product } from './product/product.entity';
-import { Category } from './category/category.entity';
-import { Inquiry } from './inquiry/inquiry.entity';
-import { Reply } from './reply/reply.entity';
-import { Size } from './size/size.entity';
-import { Stock } from './stock/stock.entity';
-import { Review } from './review/review.entity';
-import { OrderItem } from './order-item/order-item.entity';
-import { Payment } from './payment/payment.entity';
-import { Order } from './order/order.entity';
-import { Cart } from './cart/cart.entity';
-import { CartItem } from './cart-item/cart-item.entity';
-import { FavoriteStore } from './favorite-store/favorite-store.entity';
-import { Alarm } from './alarm/alarm.entity';
+import { Store } from '../src/store/store.entity';
+import { Product } from '../src/product/product.entity';
+import { Category } from '../src/category/category.entity';
+import { Inquiry } from '../src/inquiry/inquiry.entity';
+import { Reply } from '../src/reply/reply.entity';
+import { Size } from '../src/size/size.entity';
+import { Stock } from '../src/stock/stock.entity';
+import { Review } from '../src/review/review.entity';
+import { OrderItem } from '../src/order-item/order-item.entity';
+import { Payment } from '../src/payment/payment.entity';
+import { Order } from '../src/order/order.entity';
+import { Cart } from '../src/cart/cart.entity';
+import { CartItem } from '../src/cart-item/cart-item.entity';
+import { FavoriteStore } from '../src/favorite-store/favorite-store.entity';
+import { Alarm } from '../src/alarm/alarm.entity';
 
 async function hashingPassword(password: string) {
   return await bcrypt.hash(password, 10);
@@ -189,41 +169,3 @@ export async function clearDatabase(AppDataSource: DataSource) {
   await AppDataSource.dropDatabase();
   await AppDataSource.synchronize();
 }
-
-export async function seedAll(AppDataSource: DataSource) {
-  await clearDatabase(AppDataSource);
-  await seedGrade(AppDataSource, grade);
-  const newSeller = await seedUser(AppDataSource, user1);
-  await seedUser(AppDataSource, user2);
-  const newStore = await seedStore(AppDataSource, store);
-  const newSellerWithStoreId = {
-    //유일하게 user.storeId는 Store가 생성된뒤 삽입해야함.
-    ...newSeller,
-    storeId: newStore.id,
-  };
-  await seedUser(AppDataSource, newSellerWithStoreId);
-  await seedCategory(AppDataSource, category);
-  await seedProduct(AppDataSource, product);
-  await seedSize(AppDataSource, size);
-  await seedStock(AppDataSource, stock);
-  await seedInquiry(AppDataSource, inquiry);
-  await seedReply(AppDataSource, reply);
-  await seedOrder(AppDataSource, order);
-  await seedOrderItem(AppDataSource, orderItem);
-  await seedPayment(AppDataSource, payment);
-  await seedReview(AppDataSource, review);
-  await seedCart(AppDataSource, cart);
-  await seedCartItem(AppDataSource, cartItem);
-  await seedFavoriteStore(AppDataSource, favoriteStore);
-}
-
-AppDataSource.initialize()
-  .then(async () => {
-    await seedAll(AppDataSource);
-    console.log('✅ Seed 완료');
-    await AppDataSource.destroy();
-  })
-  .catch((err) => {
-    console.error('❌ Seed 실패:', err);
-    process.exit(1);
-  });
