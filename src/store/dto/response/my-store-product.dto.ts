@@ -1,5 +1,4 @@
 import { Expose } from 'class-transformer';
-import { Stock } from 'src/stock/stock.entity';
 
 export class MyStoreProductDTO {
   @Expose()

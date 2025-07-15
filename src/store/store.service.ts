@@ -19,6 +19,8 @@ import { MyStoreProductListDTO } from './dto/response/my-store-product-list.dto'
 import { ProductService } from 'src/product/product.service';
 import { Product } from 'src/product/product.entity';
 import { FavoriteStoreService } from 'src/favorite-store/favorite-store.service';
+import { MyStoreDTO } from './dto/response/my-store.dto';
+import { StoreModule } from './store.module';
 
 @Injectable()
 export class StoreService {
@@ -80,7 +82,7 @@ export class StoreService {
       return {
         ...product,
         stock: totalStock,
-        stocks: undefined, // 필요 없으면 제거
+        stocks: undefined,
       };
     });
     const list = await Promise.all(
@@ -92,5 +94,27 @@ export class StoreService {
       store.id,
     );
     return { list, totalCount };
+  }
+
+  async getMyStoreInfo(userId: string): Promise<MyStoreDTO> {
+    const store = await this.storeRepository.findOneBy({ userId });
+    if (!store) {
+      throw new NotFoundException(`You do not have a store`);
+    }
+    const productCount = await this.productService.countProductByStoreId(
+      store.id,
+    );
+    const favoriteCount = await this.favoriteStoreService.countByStoreId(
+      store.id,
+    );
+    const monthFavoriteCount =
+      await this.favoriteStoreService.countMonthFavoriteStore(store.id);
+
+    return plainToInstance(MyStoreDTO, {
+      ...store,
+      productCount,
+      favoriteCount,
+      monthFavoriteCount,
+    });
   }
 }

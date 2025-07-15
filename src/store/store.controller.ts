@@ -18,6 +18,7 @@ import { StoreWithFavoriteCountDTO } from './dto/response/store-with-favorite-co
 import { PageParamDTO } from 'src/lib/commonDTO/page-param.dto';
 import { MyStoreProductListDTO } from './dto/response/my-store-product-list.dto';
 import { UserId } from 'src/lib/decorators/userId.decorator';
+import { MyStoreDTO } from './dto/response/my-store.dto';
 
 @Controller('/api/stores')
 export class StoreController {
@@ -55,6 +56,12 @@ export class StoreController {
   ) {
     const result: MyStoreProductListDTO =
       await this.storeService.getMyStoreProductList(pageParams, userId);
+    return result;
+  }
+
+  @Get('/detail/my')
+  async getMyStoreInfo(@UserId() userId: string): Promise<MyStoreDTO> {
+    const result = await this.storeService.getMyStoreInfo(userId);
     return result;
   }
 }
