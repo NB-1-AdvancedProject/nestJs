@@ -6,24 +6,19 @@ import {
 } from '@nestjs/common';
 import request from 'supertest';
 import { StoreModule } from 'src/store/store.module';
-import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { testTypeORMConfig } from 'src/configs/test-typeorm.config';
-import { FavoriteStoreModule } from 'src/favorite-store/favorite-store.module';
-import { ProductModule } from 'src/product/product.module';
 import { CreateStoreDTO } from 'src/store/dto/request/create-store.dto';
 import { DataSource, Repository } from 'typeorm';
 import { User, UserType } from 'src/user/user.entity';
-import {
-  clearDatabase,
-  createTestUser,
-  getAuthenticatedReq,
-} from './test-util';
-import bcrypt from 'bcrypt';
-import { seller1 } from './store-dummy';
+import { createTestUser } from './test-util';
+import { seller1 } from './dummys/store-dummy';
 import { Reflector } from '@nestjs/core';
+import { clearDatabase } from './testUtil';
 
 describe('StoreController (e2e)', () => {
   let app: INestApplication;
+  let dataSource: DataSource;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -39,14 +34,13 @@ describe('StoreController (e2e)', () => {
       new ClassSerializerInterceptor(app.get(Reflector)),
     );
     await app.init();
+    dataSource = app.get(DataSource);
   });
 
   beforeEach(async () => {
-    await clearDatabase(app);
+    await clearDatabase(dataSource);
   });
   afterAll(async () => {
-    const dataSource = app.get(DataSource);
-
     if (dataSource.isInitialized) {
       await dataSource.destroy();
     }

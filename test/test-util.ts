@@ -22,47 +22,6 @@ import { Grade } from 'src/grade/grade.entity';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from 'src/lib/constants';
 
-export function getAuthenticatedReq(app: INestApplication, userId: string) {
-  const accessToken = jwt.sign({ id: userId }, JWT_SECRET, {
-    expiresIn: '1h',
-  }); // 정은: createAccessToken 함수 생성 시 그거 사용하기
-  const agent = request(app.getHttpServer);
-
-  return {
-    get: (url: string) =>
-      agent.get(url).set('Authorization', `Bearer ${accessToken}`),
-    post: (url: string) =>
-      agent.post(url).set('Authorization', `Bearer ${accessToken}`),
-    put: (url: string) =>
-      agent.put(url).set('Authorization', `Bearer ${accessToken}`),
-    delete: (url: string) =>
-      agent.delete(url).set('Authorization', `Bearer ${accessToken}`),
-    patch: (url: string) =>
-      agent.patch(url).set('Authorization', `Bearer ${accessToken}`),
-  };
-}
-
-export async function clearDatabase(app: INestApplication) {
-  const dataSource = app.get(DataSource);
-  await dataSource.getRepository(Reply).clear();
-  // await dataSource.getRepository(Inquiry).clear();
-  // await dataSource.getRepository(Review).clear();
-  // await dataSource.getRepository(FavoriteStore).clear();
-  // await dataSource.getRepository(Alarm).clear();
-  // await dataSource.getRepository(OrderItem).clear();
-  // await dataSource.getRepository(Payment).clear();
-  // await dataSource.getRepository(Order).clear();
-  // await dataSource.getRepository(CartItem).clear();
-  // await dataSource.getRepository(Cart).clear();
-  // await dataSource.getRepository(Stock).clear();
-  // await dataSource.getRepository(Product).clear();
-  // await dataSource.getRepository(Category).clear();
-  // await dataSource.getRepository(Size).clear();
-  // await dataSource.getRepository(Store).clear();
-  // await dataSource.getRepository(User).clear();
-  // await dataSource.getRepository(Grade).clear();
-}
-
 export async function createTestUser(
   app: INestApplication,
   userData: {
