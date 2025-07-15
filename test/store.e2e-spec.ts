@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
 import request from 'supertest';
 import { StoreModule } from 'src/store/store.module';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
@@ -16,6 +20,7 @@ import {
 } from './test-util';
 import bcrypt from 'bcrypt';
 import { seller1 } from './store-dummy';
+import { Reflector } from '@nestjs/core';
 
 describe('StoreController (e2e)', () => {
   let app: INestApplication;
@@ -30,10 +35,9 @@ describe('StoreController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.use((req, res, next) => {
-      console.log(`📥 ${req.method} ${req.url}`);
-      next();
-    });
+    app.useGlobalInterceptors(
+      new ClassSerializerInterceptor(app.get(Reflector)),
+    );
     await app.init();
   });
 

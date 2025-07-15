@@ -22,6 +22,10 @@ import { FavoriteStoreService } from 'src/favorite-store/favorite-store.service'
 import { MyStoreDTO } from './dto/response/my-store.dto';
 import { StoreModule } from './store.module';
 import { UpdateStoreDTO } from './dto/request/update-store.dto';
+import {
+  FavoriteStoreResDTO,
+  FavoriteStoreType,
+} from 'src/favorite-store/dto/favorite-store-res.dto';
 
 @Injectable()
 export class StoreService {
@@ -135,5 +139,26 @@ export class StoreService {
     const saved = await this.storeRepository.save(store);
 
     return plainToInstance(StoreResDTO, saved);
+  }
+
+  async registerFavoriteStore(
+    userId: string,
+    storeId: string,
+  ): Promise<FavoriteStoreResDTO> {
+    const existingFavoriteStore =
+      await this.favoriteStoreService.countByStoreIDAndUserId(storeId, userId);
+    if (existingFavoriteStore !== 0) {
+      throw new ConflictException('Already liked store');
+    }
+
+    const newFavoriteStore = this.favoriteStoreService.register({
+      storeId,
+      userId,
+    });
+
+    return plainToInstance(FavoriteStoreResDTO, {
+      type: FavoriteStoreType.register,
+      store: newFavoriteStore,
+    });
   }
 }

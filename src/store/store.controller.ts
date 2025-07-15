@@ -21,6 +21,7 @@ import { MyStoreProductListDTO } from './dto/response/my-store-product-list.dto'
 import { UserId } from 'src/lib/decorators/userId.decorator';
 import { MyStoreDTO } from './dto/response/my-store.dto';
 import { UpdateStoreDTO } from './dto/request/update-store.dto';
+import { FavoriteStoreResDTO } from 'src/favorite-store/dto/favorite-store-res.dto';
 
 @Controller('/api/stores')
 export class StoreController {
@@ -73,11 +74,24 @@ export class StoreController {
     @UserId() userId: string,
     @Param('id', new ParseUUIDPipe()) storeId: string,
     @Body() updateStoreDTO: UpdateStoreDTO,
-  ) {
+  ): Promise<StoreResDTO> {
     const result = await this.storeService.updateMyStore(
       updateStoreDTO,
       userId,
       storeId,
     );
+    return result;
+  }
+
+  @Post('/:id/favorite')
+  async registerFavoriteStore(
+    @UserId() userId: string,
+    @Param('id', new ParseUUIDPipe()) storeId: string,
+  ): Promise<FavoriteStoreResDTO> {
+    const result = await this.storeService.registerFavoriteStore(
+      userId,
+      storeId,
+    );
+    return result;
   }
 }

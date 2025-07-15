@@ -14,6 +14,15 @@ export class FavoriteStoreService {
     return await this.favoriteStoreRepository.count({ where: { storeId } });
   }
 
+  async countByStoreIDAndUserId(
+    storeId: string,
+    userId: string,
+  ): Promise<number> {
+    return await this.favoriteStoreRepository.count({
+      where: { storeId, userId },
+    });
+  }
+
   async countMonthFavoriteStore(storeId: string): Promise<number> {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -24,5 +33,13 @@ export class FavoriteStoreService {
         createdAt: MoreThan(thirtyDaysAgo),
       },
     });
+  }
+
+  async register(data: {
+    storeId: string;
+    userId: string;
+  }): Promise<FavoriteStore> {
+    const favoriteStore = this.favoriteStoreRepository.create(data);
+    return await this.favoriteStoreRepository.save(favoriteStore);
   }
 }
