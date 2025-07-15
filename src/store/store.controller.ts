@@ -5,15 +5,19 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { StoreService } from './store.service';
-import { CreateStoreDTO } from './dto/create-store.dto';
+import { CreateStoreDTO } from './dto/request/create-store.dto';
 import { Store } from './store.entity';
-import { StoreResDTO } from './dto/store-res.dto';
-import { StoreWithFavoriteCountDTO } from './dto/store-with-favorite-count.dto';
+import { StoreResDTO } from './dto/response/store-res.dto';
+import { StoreWithFavoriteCountDTO } from './dto/response/store-with-favorite-count.dto';
+import { PageParamDTO } from 'src/lib/commonDTO/page-param.dto';
+import { MyStoreProductListDTO } from './dto/response/my-store-product-list.dto';
+import { UserId } from 'src/lib/decorators/userId.decorator';
 
 @Controller('store')
 export class StoreController {
@@ -34,7 +38,6 @@ export class StoreController {
   }
 
   @Get('/:id')
-  @UsePipes(ValidationPipe)
   async getStoreInfo(
     @Param('id', new ParseUUIDPipe()) storeId: string,
   ): Promise<StoreWithFavoriteCountDTO> {
@@ -42,4 +45,15 @@ export class StoreController {
       await this.storeService.getStoreInfo(storeId);
     return result;
   }
+
+  // @Get('/detail/my/product')
+  // @UsePipes(new ValidationPipe({ transform: true }))
+  // async getMyStoreProductList(
+  //   @Query() pageParams: PageParamDTO,
+  //   @UserId() userId: string,
+  // ) {
+  //   const result: MyStoreProductListDTO =
+  //     await this.storeService.getMyStoreProductList(pageParams, userId);
+  //   return result;
+  // }
 }

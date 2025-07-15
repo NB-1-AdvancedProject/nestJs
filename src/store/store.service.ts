@@ -1,27 +1,34 @@
 import {
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Store } from './store.entity';
-import { CreateStoreDTO } from './dto/create-store.dto';
+import { CreateStoreDTO } from './dto/request/create-store.dto';
 import { User, UserType } from 'src/user/user.entity';
 import { plainToInstance } from 'class-transformer';
-import { StoreResDTO } from './dto/store-res.dto';
-import { StoreWithFavoriteCountDTO } from './dto/store-with-favorite-count.dto';
+import { StoreResDTO } from './dto/response/store-res.dto';
+import { StoreWithFavoriteCountDTO } from './dto/response/store-with-favorite-count.dto';
 import { FavoriteStore } from 'src/favorite-store/favorite-store.entity';
+import { PageParamDTO } from 'src/lib/commonDTO/page-param.dto';
+import { MyStoreProductDTO } from './dto/response/my-store-product.dto';
+import { MyStoreProductListDTO } from './dto/response/my-store-product-list.dto';
+import { ProductService } from 'src/product/product.service';
+import { Product } from 'src/product/product.entity';
+import { FavoriteStoreService } from 'src/favorite-store/favorite-store.service';
 
 @Injectable()
 export class StoreService {
   constructor(
     @InjectRepository(Store)
     private storeRepository: Repository<Store>,
-    @InjectRepository(User)
+    @InjectRepository(User) // 정은 : service 로 변경할 것!
     private userRepository: Repository<User>,
-    @InjectRepository(FavoriteStore)
-    private favoriteStoreRepository: Repository<FavoriteStore>,
+    private productService: ProductService,
+    private favoriteStoreService: FavoriteStoreService,
   ) {}
 
   async createStore(dto: CreateStoreDTO, userId: string): Promise<StoreResDTO> {
@@ -43,12 +50,22 @@ export class StoreService {
 
   async getStoreInfo(storeId: string): Promise<StoreWithFavoriteCountDTO> {
     const store = await this.storeRepository.findOneBy({ id: storeId });
-    const favoriteCount = await this.favoriteStoreRepository.countBy({
-      storeId,
-    });
+    const favoriteCount =
+      await this.favoriteStoreService.countByStoreId(storeId);
     return plainToInstance(StoreWithFavoriteCountDTO, {
       ...store,
       favoriteCount,
     });
   }
+
+  // async getMyStoreProductList(
+  //   pageParams: PageParamDTO,
+  //   userId: string,
+  // ): Promise<MyStoreProductListDTO> {
+  //   const store = await this.storeRepository.findOneBy({ userId });
+  //   if (!store) {
+  //     throw new NotFoundException(`Store with userId ${userId} does not exist`);
+  //   }
+  //   const products: Product;
+  // }
 }
