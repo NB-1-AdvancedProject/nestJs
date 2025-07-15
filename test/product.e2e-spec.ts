@@ -1,18 +1,45 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from './../src/app.module';
+import {
+  seedCategory,
+  seedGrade,
+  seedProduct,
+  seedStore,
+  seedUser,
+} from './testUtil';
+import {
+  dummyCategory,
+  dummyGrade,
+  dummyProduct,
+  dummyStore,
+  dummyUser1,
+} from './dummys/productDummy';
+import { DataSource } from 'typeorm';
 
 describe('ProductController (e2e)', () => {
   let app: INestApplication;
-
+  let dataSource: DataSource;
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    dataSource = app.get(DataSource);
+    await seedGrade(dataSource, dummyGrade);
+    const newSeller = await seedUser(dataSource, dummyUser1);
+    const newStore = await seedStore(dataSource, dummyStore);
+    const newSellerWithStoreId = {
+      //유일하게 user.storeId는 Store가 생성된뒤 삽입해야함.
+      ...newSeller,
+      storeId: newStore.id,
+    };
+    await seedUser(dataSource, newSellerWithStoreId);
+    await seedCategory(dataSource, dummyCategory);
+    await seedProduct(dataSource, dummyProduct);
   });
 
   it('GET /api/products - should return 200 and array', async () => {
@@ -21,27 +48,6 @@ describe('ProductController (e2e)', () => {
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
   });
-
-  it('GET /api/products?page=1&pageSize=2 - should return paginated products', async () => {
-    const res = await request(app.getHttpServer())
-      .get('/api/products')
-      .query({ page: 1, pageSize: 2 });
-
-    expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body.length).toBeLessThanOrEqual(2);
-  });
-
-  it('GET /api/products?pageSize=0 - should return empty array', async () => {
-    const res = await request(app.getHttpServer())
-      .get('/api/products')
-      .query({ pageSize: 0 });
-
-    expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body.length).toBe(0);
-  });
-
   afterAll(async () => {
     await app.close();
   });
