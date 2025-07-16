@@ -11,7 +11,7 @@ import { User } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { StoreService } from 'src/store/store.service';
 import { InquiryService } from 'src/inquiry/inquiry.service';
-import { reqPatchReplyDto } from '../lib/dto/replyDto';
+import { reqReplyDto } from '../lib/dto/replyDto';
 import { DataSource } from 'typeorm';
 import { AlarmService } from 'src/alarm/alarm.service';
 
@@ -67,11 +67,7 @@ export class ReplyService {
     return reply;
   }
 
-  async updateRepliesData(
-    userId: string,
-    replyId: string,
-    body: reqPatchReplyDto,
-  ) {
+  async updateRepliesData(userId: string, replyId: string, body: reqReplyDto) {
     const userData = await this.userService.userFindId(userId);
 
     if (!userData) {
@@ -103,7 +99,7 @@ export class ReplyService {
     });
   }
 
-  async postQuiry(inquiryId: string, body: reqPatchReplyDto, userId: string) {
+  async postQuiry(inquiryId: string, body: reqReplyDto, userId: string) {
     const userData = await this.userService.userFindId(userId);
     if (!userData) throw new NotFoundException();
     if (userData.type === 'BUYER') throw new ForbiddenException();
@@ -119,7 +115,7 @@ export class ReplyService {
       const savedReply = await queryRunner.manager.getRepository(Reply).save({
         userId,
         inquiryId,
-        body,
+        content: body.content,
       });
 
       await this.alarmService.createAlarmData(

@@ -129,7 +129,6 @@ export class InquiryService {
   }
 
   async inquiryFindId(inquiryId: string) {
-    console.log('🟡 inquiryFindId called');
     return this.inquiryRepository.findOne({
       where: { id: inquiryId },
       relations: {

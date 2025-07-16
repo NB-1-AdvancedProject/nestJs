@@ -10,12 +10,14 @@ import { Product } from 'src/product/product.entity';
 import { Store } from 'src/store/store.entity';
 import { Reply } from 'src/reply/reply.entity';
 import { Category } from 'src/category/category.entity';
+import { Alarm } from 'src/alarm/alarm.entity';
 
 describe('replyController (e2e)', () => {
   let app: INestApplication;
   let httpServer: Server;
   let inquiryId: string;
   let sellerUserId: string;
+  let buyerUserId: string;
   let replyId: string;
   let dataSource: DataSource;
 
@@ -70,6 +72,7 @@ describe('replyController (e2e)', () => {
       type: UserType.BUYER,
       provider: 'local',
     });
+    buyerUserId = buyerUser.id;
     await userRepo.save(buyerUser);
 
     const sellerUser = await userRepo.save({
@@ -133,5 +136,53 @@ describe('replyController (e2e)', () => {
 
     expect(res.body).toHaveProperty('id', replyId);
     expect(res.body.user).toHaveProperty('name', '판매자유저');
+  });
+
+  it('Patch /inquiry/:replyId/replies - return reply data', async () => {
+    const updateBody = {
+      content: '변경된 내용입니다.',
+    };
+    const res = await request(httpServer)
+      .patch(`/reply/${replyId}/replies`)
+      .set('Authorization', `Bearer ${sellerUserId}`)
+      .send(updateBody)
+      .expect(200);
+
+    expect(res.body).toHaveProperty('id', replyId);
+    expect(res.body).toHaveProperty('inquiryId', inquiryId);
+    expect(res.body).toHaveProperty('content', '변경된 내용입니다.');
+  });
+
+  it('Post /inquiry/:replyId/replies - return reply data', async () => {
+    const alarmRepo = dataSource.getRepository(Alarm);
+    const inquiryRepo = dataSource.getRepository(Inquiry);
+    const replyRepo = dataSource.getRepository(Reply);
+
+    await replyRepo.delete({ inquiryId });
+    const createBody = {
+      content: '생성 내용입니다.',
+    };
+    const res = await request(httpServer)
+      .post(`/reply/${inquiryId}/replies`)
+      .set('Authorization', `Bearer ${sellerUserId}`)
+      .send(createBody)
+      .expect(201);
+
+    expect(res.body).toHaveProperty('id');
+    expect(res.body).toHaveProperty('inquiryId', inquiryId);
+    expect(res.body).toHaveProperty('content', '생성 내용입니다.');
+
+    const replyId = res.body.id;
+
+    const alarm = await alarmRepo.findOne({
+      where: { userId: buyerUserId },
+      order: { createdAt: 'DESC' },
+    });
+
+    expect(alarm).toBeDefined();
+    expect(alarm?.content).toContain('문의 답변이 완료되었습니다.');
+
+    const updatedInquiry = await inquiryRepo.findOneBy({ id: inquiryId });
+    expect(updatedInquiry?.status).toBe('completedAnswer');
   });
 });

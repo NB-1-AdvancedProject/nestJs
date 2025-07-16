@@ -4,7 +4,7 @@ import { IsString, IsNotEmpty } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class reqPatchReplyDto {
+export class reqReplyDto {
   @ApiProperty({ example: '답변 내용입니다.' })
   @IsString()
   @IsNotEmpty()

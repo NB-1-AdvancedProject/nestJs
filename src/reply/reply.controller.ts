@@ -5,7 +5,7 @@ import { UserId } from 'src/lib/decorators/userId.decorator';
 import { plainToInstance } from 'class-transformer';
 import { InquiryDetailDto } from '../lib/dto/inquiryDto';
 import { ValidationPipe } from '@nestjs/common';
-import { reqPatchReplyDto, replyResponseDto } from '../lib/dto/replyDto';
+import { reqReplyDto, replyResponseDto } from '../lib/dto/replyDto';
 import {
   ApiOperation,
   ApiParam,
@@ -41,7 +41,7 @@ export class ReplyController {
   @Patch(':replyId/replies')
   @ApiOperation({ summary: '답변 수정' })
   @ApiParam({ name: 'replyId', type: String, description: '답변 ID' })
-  @ApiBody({ type: reqPatchReplyDto })
+  @ApiBody({ type: reqReplyDto })
   @ApiResponse({
     status: 200,
     description: '답변 수정 성공',
@@ -51,7 +51,7 @@ export class ReplyController {
     @UserId() userId: string,
     @Param('replyId') replyId: string,
     @Body(new ValidationPipe({ whitelist: true, transform: true }))
-    body: reqPatchReplyDto,
+    body: reqReplyDto,
   ): Promise<replyResponseDto> {
     const reply = await this.replyService.updateRepliesData(
       userId,
@@ -67,7 +67,7 @@ export class ReplyController {
   @Post(':inquiryId/replies')
   @ApiOperation({ summary: '답변 등록' })
   @ApiParam({ name: 'inquiryId', type: String, description: '문의 ID' })
-  @ApiBody({ type: reqPatchReplyDto })
+  @ApiBody({ type: reqReplyDto })
   @ApiResponse({
     status: 201,
     description: '답변 등록 성공',
@@ -77,7 +77,7 @@ export class ReplyController {
     @UserId() userId: string,
     @Param('inquiryId') inquiryId: string,
     @Body(new ValidationPipe({ whitelist: true, transform: true }))
-    body: reqPatchReplyDto,
+    body: reqReplyDto,
   ): Promise<replyResponseDto> {
     const reply = await this.replyService.postQuiry(inquiryId, body, userId);
 
