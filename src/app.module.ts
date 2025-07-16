@@ -20,6 +20,9 @@ import { FavoriteStoreModule } from './favorite-store/favorite-store.module';
 import { AlarmModule } from './alarm/alarm.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeORMConfig } from './configs/typeorm.config';
+import { AuthModule } from './auth/auth.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-ioredis';
 
 @Module({
   imports: [
@@ -41,6 +44,15 @@ import { typeORMConfig } from './configs/typeorm.config';
     ReviewModule,
     FavoriteStoreModule,
     AlarmModule,
+    AuthModule,
+    CacheModule.registerAsync({
+      useFactory: async () => ({
+        store: redisStore,
+        host: 'localhost',
+        port: 6379,
+        ttl: 60 * 60 *2,
+      }),
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
