@@ -1,4 +1,4 @@
-import { Exclude, Expose, Transform } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 import { Alarm } from '../../alarm/alarm.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
