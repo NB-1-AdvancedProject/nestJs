@@ -22,6 +22,12 @@ export class AuthService {
 
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(password, salt);
+
+    const find = await this.userRepository.findOne({ where: { email } });
+
+    if(find) {
+      throw new UnauthorizedException("중복된 아이디 입니다.")
+    }
     const user = await this.userRepository.create({
       name,
       password,
