@@ -15,4 +15,13 @@ export class StoreService {
       where: { id: storeId },
     });
   }
+  async getStoreByUserId(userId: string) {
+    const store = await this.storeRepository.findOne({
+      where: { userId },
+    });
+    if (!store) {
+      throw new NotFoundException('Store not found for this user');
+    }
+    return store;
+  }
 }

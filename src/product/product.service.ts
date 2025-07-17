@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Product } from './product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GetProductsQueryDto } from './productDto';
+import { CreateProductDto, GetProductsQueryDto } from './productDto';
 import { CategoryService } from 'src/category/category.service';
+import { StoreService } from 'src/store/store.service';
 
 @Injectable()
 export class ProductService {
@@ -11,6 +12,7 @@ export class ProductService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly categoryService: CategoryService,
+    private readonly storeService: StoreService,
   ) {}
 
   async getProducts(query: GetProductsQueryDto): Promise<Product[]> {
@@ -83,5 +85,29 @@ export class ProductService {
     const skip = (query.page - 1) * query.pageSize;
     qb.skip(skip).take(query.pageSize);
     return qb.getMany();
+  }
+  async createProduct(data: CreateProductDto, userId: string) {
+    const store = await this.storeService.getStoreByUserId(userId);
+    if (!store) {
+      throw new NotFoundException('존재하지 않는 Store입니다. ');
+    }
+    const category = await this.categoryService.upsertCategory(
+      data.categoryName,
+    );
+    const product = this.productRepository.create({
+      name: data.name,
+      price: data.price.toString(),
+      content: data.content,
+      image: data.image,
+      discountPrice: data.discountRate
+        ? ((data.price * (100 - data.discountRate)) / 100).toString()
+        : null,
+      discountRate: data.discountRate || 0,
+      discountStartTime: data.discountStartTime || null,
+      discountEndTime: data.discountEndTime || null,
+      category: category,
+      store: store,
+    });
+    return this.productRepository.save(product);
   }
 }
