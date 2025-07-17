@@ -1,4 +1,5 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import * as jwt from 'jsonwebtoken';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -25,8 +26,8 @@ export class AuthService {
 
     const find = await this.userRepository.findOne({ where: { email } });
 
-    if(find) {
-      throw new UnauthorizedException("중복된 아이디 입니다.")
+    if (find) {
+      throw new UnauthorizedException('중복된 아이디 입니다.');
     }
     const user = await this.userRepository.create({
       name,
@@ -60,7 +61,9 @@ export class AuthService {
     }
   }
 
-  async logOut(userId: string, accessToken: string): Promise<void> {
+  async logOut(accessToken: string): Promise<void> {
+    const decoded: any = jwt.decode(accessToken);
+    const userId = decoded.sub;
     await this.cacheManager.del(`refreshToken: ${userId}`);
     await this.cacheManager.set(`blasklist: ${accessToken}`, true, {
       ttl: 60 * 60 * 2,

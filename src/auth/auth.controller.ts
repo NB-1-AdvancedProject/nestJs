@@ -20,8 +20,8 @@ export class AuthController {
   }
 
   @Post('/logout')
-  logout(@Body() body: { userId: string; accessToken: string }): Promise<void> {
-    const { userId, accessToken } = body;
-    return this.authService.logOut(userId, accessToken);
+  logout(@Body() body: { accessToken: string }): Promise<void> {
+    const { accessToken } = body;
+    return this.authService.logOut( accessToken);
   }
 }
