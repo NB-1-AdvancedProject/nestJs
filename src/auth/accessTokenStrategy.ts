@@ -13,7 +13,7 @@ import { Repository } from 'typeorm';
 import { CacheWithSetGetDel } from './dto/authDTO';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class AccessTokenStrategy extends PassportStrategy(Strategy) {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -27,15 +27,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { id: payload.sub },
-    });
-    const token = '';
-
-    const isBlacklisted = await this.cacheManager.get(`blacklist: ${token}`);
+    const isBlacklisted = await this.cacheManager.get(
+      `blacklist: ${payload.jti}`,
+    );
     if (isBlacklisted) {
       throw new UnauthorizedException('Token is blacklisted');
     }
+
+    const user = await this.userRepository.findOneBy({ id: payload.sub });
 
     if (!user) {
       throw new UnauthorizedException();

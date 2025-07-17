@@ -15,13 +15,21 @@ export class AuthController {
   @Post('/signIn')
   signIn(
     @Body(ValidationPipe) logInDto: LogInDto,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     return this.authService.singIn(logInDto);
   }
 
   @Post('/logout')
   logout(@Body() body: { accessToken: string }): Promise<void> {
     const { accessToken } = body;
-    return this.authService.logOut( accessToken);
+    return this.authService.logOut(accessToken);
+  }
+
+  @Post('/refresh')
+  refresh(
+    @Body() body: { refreshToken: string },
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const { refreshToken } = body;
+    return this.authService.refreshToken(refreshToken);
   }
 }

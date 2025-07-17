@@ -7,6 +7,7 @@ import { User } from 'src/user/user.entity';
 import { Repository } from 'typeorm';
 import { CacheWithSetGetDel, CreateUserDto, LogInDto } from './dto/authDTO';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { JWT_REFRESH_SECRET, JWT_SECRET } from 'src/lib/constants';
 
 @Injectable()
 export class AuthService {
@@ -48,8 +49,10 @@ export class AuthService {
 
     if (user && (await bcrypt.compare(password, user.password))) {
       const payload = { sub: user.id };
-      const accessToken = this.jwtService.sign(payload, { expiresIn: '2h' });
-      const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+      const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '2h' });
+      const refreshToken = jwt.sign(payload, JWT_REFRESH_SECRET, {
+        expiresIn: '7d',
+      });
 
       await this.cacheManager.set(`refreshToken: ${user.id}`, refreshToken, {
         ttl: 60 * 60 * 24 * 7,
@@ -71,22 +74,31 @@ export class AuthService {
   }
 
   async refreshToken(
-    userId: string,
     oldRefreshToken: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
+    const decoded = jwt.decode(oldRefreshToken);
+    const userId = decoded?.sub;
     const savedToken = await this.cacheManager.get(`refreshToken: ${userId}`);
     if (savedToken !== oldRefreshToken) {
       throw new UnauthorizedException('Invaild refresh token');
     }
 
+    try {
+      jwt.verify(oldRefreshToken, JWT_REFRESH_SECRET);
+    } catch (e) {
+      throw new UnauthorizedException('Expired or invalid refresh token');
+    }
+
     const payload = { sub: userId };
-    const newAccressToken = this.jwtService.sign(payload, { expiresIn: '2h' });
-    const newRefreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+    const newAccessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '2h' });
+    const newRefreshToken = jwt.sign(payload, JWT_REFRESH_SECRET, {
+      expiresIn: '7d',
+    });
 
     await this.cacheManager.set(`refreshToken: ${userId}`, newRefreshToken, {
       ttl: 60 * 60 * 2,
     });
 
-    return { accessToken: newAccressToken, refreshToken: newRefreshToken };
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }
 }
