@@ -48,8 +48,9 @@ describe('AlarmController (e2e)', () => {
     await app.init();
     // 실제 서버 내부 로직 초기화(미들웨어 인터셉터 파이프 )
     dataSource = moduleFixture.get(DataSource);
+
+    await dataSource.dropDatabase();
     await dataSource.synchronize(true);
-    // 테스트용 SQLite 같은 DB를 새로 초기화. 모든 테이블을 드롭 후 재생성
     httpServer = app.getHttpServer();
     // supertest가 사용할 수 있는 http 서버 객체 흭득하기 위해 사용
     await new Promise<void>((resolve) => httpServer.listen(0, resolve));

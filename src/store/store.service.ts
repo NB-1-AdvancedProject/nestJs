@@ -182,4 +182,10 @@ export class StoreService {
       store: existingFavoriteStore.store,
     });
   }
+
+  async storeFindId(storeId: string) {
+    return this.storeRepository.findOne({
+      where: { id: storeId },
+    });
+  }
 }
