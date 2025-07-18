@@ -38,7 +38,6 @@ export class AuthService {
 
     const grade = await this.gradeRepository.upsert(
       {
-        id: 'grade_green',
         name: 'green',
         pointRate: 1,
         minAmount: String(100000),

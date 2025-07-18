@@ -29,7 +29,7 @@ export class UserService {
     if (!userData) {
       throw new NotFoundException('유저를 찾을 수 없습니다.');
     }
-    return UserService.filterSensitiveUserData(userData);
+    return userData;
   }
 
   async updateUser(id: string, data: UpdateUserDto): Promise<UserRes> {
@@ -71,6 +71,7 @@ export class UserService {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+    
     if (!isMatch) {
       throw new UnauthorizedException('비밀 번호를 다시 확인해주세요.');
     }
