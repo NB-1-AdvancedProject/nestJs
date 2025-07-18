@@ -1,22 +1,5 @@
 import { Injectable } from '@nestjs/common';
-<<<<<<< HEAD
-import { Product } from './product.entity';
 import { PageParamDTO } from 'src/lib/commonDTO/page-param.dto';
-
-@Injectable()
-export class ProductService {
-  async getProductsWithStocksByStoreId(
-    storeId: string,
-    pageParams: PageParamDTO,
-  ): Promise<Product[]> {
-    // 정은: 머지 후 구현 예정
-    throw new Error('Not implemented yet');
-  }
-
-  async countProductByStoreId(storeId: string): Promise<number> {
-    // 정은: 머지 후 구현 예정
-    throw new Error('Not implemented yet');
-=======
 import { Repository } from 'typeorm';
 import { Product } from './product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -101,6 +84,21 @@ export class ProductService {
     const skip = (query.page - 1) * query.pageSize;
     qb.skip(skip).take(query.pageSize);
     return qb.getMany();
->>>>>>> 3de76a4ffbe99cde200bd4b08f0495cf370b6570
+  }
+  async getProductsWithStocksByStoreId(
+    storeId: string,
+    pageParams: PageParamDTO,
+  ): Promise<Product[]> {
+    const { page, pageSize } = pageParams;
+    const products = await this.productRepository.find({
+      where: { store: { id: storeId } },
+      relations: ['stocks'],
+    });
+    return products;
+  }
+
+  async countProductByStoreId(storeId: string): Promise<number> {
+    // 정은: 머지 후 구현 예정
+    throw new Error('Not implemented yet');
   }
 }

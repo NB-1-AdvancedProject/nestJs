@@ -14,7 +14,7 @@ import { DataSource, Repository } from 'typeorm';
 import { User, UserType } from 'src/user/user.entity';
 import { seller1 } from './dummys/store-dummy';
 import { Reflector } from '@nestjs/core';
-import { clearDatabase } from './testUtil';
+import { clearDatabase, getAuthenticatedReq } from './testUtil';
 
 describe('StoreController (e2e)', () => {
   let app: INestApplication;
@@ -60,9 +60,8 @@ describe('StoreController (e2e)', () => {
         content: '좋은 찜질방이에요~',
       };
 
-      const response = await request(app.getHttpServer())
-        .post('/api/stores')
-        .send(createStoreDTO);
+      const agent = getAuthenticatedReq(app, seller.id);
+      const response = await agent.post('/api/stores').send(createStoreDTO);
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('id');

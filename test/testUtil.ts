@@ -19,6 +19,8 @@ import { CartItem } from '../src/cart-item/cart-item.entity';
 import { FavoriteStore } from '../src/favorite-store/favorite-store.entity';
 import { Alarm } from '../src/alarm/alarm.entity';
 import { INestApplication } from '@nestjs/common';
+import * as jwt from 'jsonwebtoken';
+import { JWT_SECRET } from 'src/lib/constants';
 
 async function hashingPassword(password: string) {
   return await bcrypt.hash(password, 10);
@@ -172,11 +174,9 @@ export async function clearDatabase(AppDataSource: DataSource) {
   await AppDataSource.synchronize();
 }
 
-// 정은: createAccessToken 함수 생성 시 주석 풀고 연결하기
-/*
 export function getAuthenticatedReq(app: INestApplication, userId: string) {
-  // const accessToken = createAccessToken(userId); 
-  
+  const payload = { sub: userId };
+  const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '2h' });
   const agent = request(app.getHttpServer);
 
   return {
@@ -191,5 +191,4 @@ export function getAuthenticatedReq(app: INestApplication, userId: string) {
     patch: (url: string) =>
       agent.patch(url).set('Authorization', `Bearer ${accessToken}`),
   };
-  
-} */
+}
