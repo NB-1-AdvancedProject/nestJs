@@ -8,6 +8,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { CreateStockDto } from 'src/stock/stockDto';
 
 export class GetProductsQueryDto {
   constructor(partial?: Partial<GetProductsQueryDto>) {
@@ -74,14 +75,6 @@ export class GetProductsQueryDto {
   categoryName: string;
 }
 
-class StockDto {
-  @IsString()
-  sizeId: string;
-
-  @IsInt()
-  quantity: number;
-}
-
 export class CreateProductDto {
   @IsString()
   name: string;
@@ -112,6 +105,6 @@ export class CreateProductDto {
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => StockDto)
-  stocks: StockDto[];
+  @Type(() => CreateStockDto)
+  stocks: CreateStockDto[];
 }

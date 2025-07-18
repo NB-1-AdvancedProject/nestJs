@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Product } from './product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateProductDto, GetProductsQueryDto } from './productDto';
 import { CategoryService } from 'src/category/category.service';
 import { StoreService } from 'src/store/store.service';
+import { StockService } from 'src/stock/stock.service';
 
 @Injectable()
 export class ProductService {
@@ -13,6 +14,8 @@ export class ProductService {
     private readonly productRepository: Repository<Product>,
     private readonly categoryService: CategoryService,
     private readonly storeService: StoreService,
+    private readonly stockService: StockService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getProducts(query: GetProductsQueryDto): Promise<Product[]> {
@@ -86,28 +89,53 @@ export class ProductService {
     qb.skip(skip).take(query.pageSize);
     return qb.getMany();
   }
-  async createProduct(data: CreateProductDto, userId: string) {
+  async createProductWithStock(data: CreateProductDto, userId: string) {
     const store = await this.storeService.getStoreByUserId(userId);
-    if (!store) {
-      throw new NotFoundException('존재하지 않는 Store입니다. ');
-    }
+    if (!store) throw new NotFoundException('존재하지 않는 Store입니다.');
+
     const category = await this.categoryService.upsertCategory(
       data.categoryName,
     );
-    const product = this.productRepository.create({
-      name: data.name,
-      price: data.price.toString(),
-      content: data.content,
-      image: data.image,
-      discountPrice: data.discountRate
-        ? ((data.price * (100 - data.discountRate)) / 100).toString()
-        : null,
-      discountRate: data.discountRate || 0,
-      discountStartTime: data.discountStartTime || null,
-      discountEndTime: data.discountEndTime || null,
-      category: category,
-      store: store,
-    });
-    return this.productRepository.save(product);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const product = this.productRepository.create({
+        name: data.name,
+        price: data.price.toString(),
+        content: data.content,
+        image: data.image,
+        discountPrice: data.discountRate
+          ? ((data.price * (100 - data.discountRate)) / 100).toString()
+          : undefined,
+        discountRate: data.discountRate || 0,
+        discountStartTime: data.discountStartTime || undefined,
+        discountEndTime: data.discountEndTime || undefined,
+        category,
+        store,
+      });
+
+      const savedProduct = await queryRunner.manager.save(product);
+      const stocks = await this.stockService.createStocksForProduct(
+        savedProduct.id,
+        data.stocks,
+        queryRunner.manager,
+      );
+      await queryRunner.commitTransaction();
+      return {
+        ...savedProduct,
+        storeId: store.id,
+        storeName: store.name,
+        category,
+        stocks,
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }
