@@ -118,8 +118,11 @@ export class ReplyService {
         content: body.content,
       });
 
+      const content = '문의 답변이 완료되었습니다.';
+
       await this.alarmService.createAlarmData(
         inquiry.userId,
+        content,
         queryRunner.manager,
       );
 

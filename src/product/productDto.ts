@@ -1,5 +1,12 @@
 import { Transform } from 'class-transformer';
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class GetProductsQueryDto {
   constructor(partial?: Partial<GetProductsQueryDto>) {
@@ -65,3 +72,22 @@ export class GetProductsQueryDto {
   @IsString()
   categoryName: string;
 }
+
+export class postProductInquiryDto {
+  @ApiProperty({ example: '상품 문의합니다.' })
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  @ApiProperty({ example: '문의 내용입니다.' })
+  @IsString()
+  @IsNotEmpty()
+  content: string;
+
+  @ApiProperty({ example: '문의 내용입니다.' })
+  @IsBoolean()
+  @IsNotEmpty()
+  isSecret: boolean;
+}
+
+export class postProductInquiryResponseDto {}

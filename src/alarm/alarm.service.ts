@@ -42,8 +42,11 @@ export class AlarmService {
     return await this.alarmRepository.find({ where: { userId } });
   }
 
-  async createAlarmData(userId: string, manager: EntityManager) {
-    const content = '문의 답변이 완료되었습니다.';
+  async createAlarmData(
+    userId: string,
+    content: string,
+    manager: EntityManager,
+  ) {
     return manager.getRepository(Alarm).save({ userId, content });
   }
 }
