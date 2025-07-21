@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Alarm } from './alarm.entity';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
@@ -40,5 +40,10 @@ export class AlarmService {
 
   async getAllUserAlarms(userId: string) {
     return await this.alarmRepository.find({ where: { userId } });
+  }
+
+  async createAlarmData(userId: string, manager: EntityManager) {
+    const content = '문의 답변이 완료되었습니다.';
+    return manager.getRepository(Alarm).save({ userId, content });
   }
 }

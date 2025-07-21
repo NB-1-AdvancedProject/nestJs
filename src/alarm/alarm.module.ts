@@ -8,5 +8,6 @@ import { Alarm } from './alarm.entity';
   imports: [TypeOrmModule.forFeature([Alarm])],
   controllers: [AlarmController],
   providers: [AlarmService],
+  exports: [AlarmService],
 })
 export class AlarmModule {}

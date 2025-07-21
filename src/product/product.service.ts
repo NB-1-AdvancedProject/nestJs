@@ -84,4 +84,8 @@ export class ProductService {
     qb.skip(skip).take(query.pageSize);
     return qb.getMany();
   }
+
+  async productFindId(productId: string) {
+    return this.productRepository.findOne({ where: { id: productId } });
+  }
 }
