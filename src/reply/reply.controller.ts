@@ -83,7 +83,7 @@ export class ReplyController {
     @Body(new ValidationPipe({ whitelist: true, transform: true }))
     body: reqReplyDto,
   ): Promise<replyResponseDto> {
-    const reply = await this.replyService.postQuiry(inquiryId, body, userId);
+    const reply = await this.replyService.postReply(inquiryId, body, userId);
 
     return plainToInstance(replyResponseDto, reply, {
       excludeExtraneousValues: true,

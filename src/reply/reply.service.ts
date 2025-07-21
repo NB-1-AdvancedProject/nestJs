@@ -99,7 +99,7 @@ export class ReplyService {
     });
   }
 
-  async postQuiry(inquiryId: string, body: reqReplyDto, userId: string) {
+  async postReply(inquiryId: string, body: reqReplyDto, userId: string) {
     const userData = await this.userService.userFindId(userId);
     if (!userData) throw new NotFoundException();
     if (userData.type === 'BUYER') throw new ForbiddenException();

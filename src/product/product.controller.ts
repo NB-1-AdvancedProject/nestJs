@@ -49,12 +49,12 @@ export class ProductController {
     description: '문의 등록 성공',
     type: InquiryPatchResponseDto,
   })
-  async postQuiryData(
+  async postInquiryData(
     @UserId() userId: string,
     @Param('productId', new ParseUUIDPipe()) productId: string,
     @Body(new ValidationPipe({ transform: true })) body: postProductInquiryDto,
   ): Promise<InquiryPatchResponseDto> {
-    const inquiry = await this.productService.postQuiry(
+    const inquiry = await this.productService.postInquiry(
       productId,
       body,
       userId,

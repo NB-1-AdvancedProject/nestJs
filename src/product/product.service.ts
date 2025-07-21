@@ -158,7 +158,7 @@ export class ProductService {
     return this.productRepository.findOne({ where: { id: productId } });
   }
 
-  async postQuiry(
+  async postInquiry(
     productId: string,
     body: postProductInquiryDto,
     userId: string,
