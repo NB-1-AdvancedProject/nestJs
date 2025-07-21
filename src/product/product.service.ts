@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { Product } from './product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,6 +19,7 @@ export class ProductService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly categoryService: CategoryService,
+    @Inject(forwardRef(() => StoreService))
     private readonly storeService: StoreService,
     private readonly stockService: StockService,
     private readonly dataSource: DataSource,
@@ -99,13 +105,15 @@ export class ProductService {
     const products = await this.productRepository.find({
       where: { store: { id: storeId } },
       relations: ['stocks'],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
     return products;
   }
 
   async countProductByStoreId(storeId: string): Promise<number> {
-    // 정은: 머지 후 구현 예정
-    throw new Error('Not implemented yet');
+    const count = await this.productRepository.countBy({ storeId });
+    return count;
   }
 
   async createProductWithStock(data: CreateProductDto, userId: string) {

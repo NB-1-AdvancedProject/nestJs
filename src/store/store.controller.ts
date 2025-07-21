@@ -23,22 +23,21 @@ import { UserId } from 'src/lib/decorators/userId.decorator';
 import { MyStoreDTO } from './dto/response/my-store.dto';
 import { UpdateStoreDTO } from './dto/request/update-store.dto';
 import { FavoriteStoreResDTO } from 'src/favorite-store/dto/favorite-store-res.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('/api/stores')
 export class StoreController {
   constructor(private readonly storeService: StoreService) {}
-
   @Post('/')
-  // 정은: Passport 사용한다면 AuthGuard 붙이기
+  @UseGuards(AuthGuard('jwt'))
   @UsePipes(new ValidationPipe({ transform: true }))
   async createStore(
     @Body() createStoreDTO: CreateStoreDTO,
-    // @UserId() userId: string, // 정은: 인증인가 구현시 전반적 수정 필요..!!
+    @UserId() userId: string,
   ): Promise<StoreResDTO> {
-    const TEST_USER_ID = '0d8e5d92-82c2-4f50-9b2d-45ec8d0db3b3';
     const result: StoreResDTO = await this.storeService.createStore(
       createStoreDTO,
-      TEST_USER_ID,
+      userId,
     );
     return result;
   }
@@ -53,6 +52,7 @@ export class StoreController {
   }
 
   @Get('/detail/my/product')
+  @UseGuards(AuthGuard('jwt'))
   @UsePipes(new ValidationPipe({ transform: true }))
   async getMyStoreProductList(
     @Query() pageParams: PageParamDTO,
@@ -64,12 +64,14 @@ export class StoreController {
   }
 
   @Get('/detail/my')
+  @UseGuards(AuthGuard('jwt'))
   async getMyStoreInfo(@UserId() userId: string): Promise<MyStoreDTO> {
     const result = await this.storeService.getMyStoreInfo(userId);
     return result;
   }
 
   @Patch('/:id')
+  @UseGuards(AuthGuard('jwt'))
   @UsePipes(new ValidationPipe({ transform: true }))
   async updateMyStore(
     @UserId() userId: string,
@@ -78,13 +80,14 @@ export class StoreController {
   ): Promise<StoreResDTO> {
     const result = await this.storeService.updateMyStore(
       updateStoreDTO,
-      userId,
       storeId,
+      userId,
     );
     return result;
   }
 
   @Post('/:id/favorite')
+  @UseGuards(AuthGuard('jwt'))
   async registerFavoriteStore(
     @UserId() userId: string,
     @Param('id', new ParseUUIDPipe()) storeId: string,
@@ -93,15 +96,18 @@ export class StoreController {
       userId,
       storeId,
     );
+    console.log(result);
     return result;
   }
 
   @Delete('/:id/favorite')
+  @UseGuards(AuthGuard('jwt'))
   async deleteFavoriteStore(
     @UserId() userId: string,
     @Param('id', new ParseUUIDPipe()) storeId: string,
   ): Promise<FavoriteStoreResDTO> {
     const result = await this.storeService.deleteFavoriteStore(userId, storeId);
+    console.log(result);
     return result;
   }
 }

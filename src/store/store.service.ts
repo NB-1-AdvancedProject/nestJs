@@ -1,5 +1,7 @@
 import {
   ConflictException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -33,17 +35,16 @@ export class StoreService {
     private storeRepository: Repository<Store>,
     @InjectRepository(User) // 정은 : service 로 변경할 것!
     private userRepository: Repository<User>,
-    private productService: ProductService,
+    @Inject(forwardRef(() => ProductService))
+    private readonly productService: ProductService,
     private favoriteStoreService: FavoriteStoreService,
   ) {}
 
   async createStore(dto: CreateStoreDTO, userId: string): Promise<StoreResDTO> {
-    if (process.env.NODE_ENV !== 'test') {
-      const user = await this.userRepository.findOneBy({ id: userId });
-      const userType = user?.type;
-      if (!user || userType !== UserType.SELLER) {
-        throw new UnauthorizedException('Not authorized');
-      }
+    const user = await this.userRepository.findOneBy({ id: userId });
+    const userType = user?.type;
+    if (!user || userType !== UserType.SELLER) {
+      throw new UnauthorizedException('Not authorized');
     }
 
     const existingStore = await this.storeRepository.findOneBy({ userId });
@@ -58,6 +59,9 @@ export class StoreService {
 
   async getStoreInfo(storeId: string): Promise<StoreWithFavoriteCountDTO> {
     const store = await this.storeRepository.findOneBy({ id: storeId });
+    if (!store) {
+      throw new NotFoundException(`Store does not exist`);
+    }
     const favoriteCount =
       await this.favoriteStoreService.countByStoreId(storeId);
     return plainToInstance(StoreWithFavoriteCountDTO, {
@@ -74,7 +78,6 @@ export class StoreService {
     if (!store) {
       throw new NotFoundException(`Store with userId ${userId} does not exist`);
     }
-    const { page, pageSize } = pageParams;
     const products: Product[] =
       await this.productService.getProductsWithStocksByStoreId(
         store.id,
@@ -83,10 +86,17 @@ export class StoreService {
     const productsWithStock = products.map((product) => {
       const totalStock =
         product.stocks?.reduce((sum, stock) => sum + stock.quantity, 0) ?? 0;
+      const isDiscount = product.discountEndTime
+        ? product.discountEndTime > new Date()
+        : false;
+      const isSoldOut =
+        totalStock === 0 || product.isSoldOut === true ? true : false;
       return {
         ...product,
         stock: totalStock,
         stocks: undefined,
+        isDiscount,
+        isSoldOut,
       };
     });
     const list = await Promise.all(
@@ -154,7 +164,6 @@ export class StoreService {
       storeId,
       userId,
     });
-
     return plainToInstance(FavoriteStoreResDTO, {
       type: FavoriteStoreType.register,
       store: newFavoriteStore.store,
@@ -170,7 +179,6 @@ export class StoreService {
     if (!existingFavoriteStore) {
       throw new NotFoundException(`You never liked this store`);
     }
-
     await this.favoriteStoreService.delete({
       storeId,
       userId,

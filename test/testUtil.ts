@@ -63,7 +63,8 @@ export async function seedProduct(
   product: DeepPartial<Product>,
 ) {
   const productRepo = dataSource.getRepository(Product);
-  await productRepo.save(product);
+  const saved = await productRepo.save(product);
+  return saved;
 }
 
 export async function seedCategory(

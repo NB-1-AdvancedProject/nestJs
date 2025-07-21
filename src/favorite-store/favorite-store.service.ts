@@ -26,9 +26,10 @@ export class FavoriteStoreService {
   async getByStoreIdAndUserId(
     storeId: string,
     userId: string,
-  ): Promise<FavoriteStore> {
-    return await this.favoriteStoreRepository.findOneOrFail({
+  ): Promise<FavoriteStore | null> {
+    return await this.favoriteStoreRepository.findOne({
       where: { storeId, userId },
+      relations: ['store'],
     });
   }
   async countMonthFavoriteStore(storeId: string): Promise<number> {
@@ -48,7 +49,11 @@ export class FavoriteStoreService {
     userId: string;
   }): Promise<FavoriteStore> {
     const favoriteStore = this.favoriteStoreRepository.create(data);
-    return await this.favoriteStoreRepository.save(favoriteStore);
+    const saved = await this.favoriteStoreRepository.save(favoriteStore);
+    return await this.favoriteStoreRepository.findOneOrFail({
+      where: { userId: saved.userId, storeId: saved.storeId },
+      relations: ['store'],
+    });
   }
 
   async delete(data: { storeId: string; userId: string }): Promise<void> {
