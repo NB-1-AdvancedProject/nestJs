@@ -51,10 +51,11 @@ export async function seedUser(
 export async function seedStore(
   dataSource: DataSource,
   store: DeepPartial<Store>,
-) {
+): Promise<Store> {
   const storeRepo = dataSource.getRepository(Store);
-  await storeRepo.save(store);
-  return store;
+  const created = storeRepo.create(store);
+  const saved = await storeRepo.save(created);
+  return saved;
 }
 
 export async function seedProduct(
@@ -177,7 +178,7 @@ export async function clearDatabase(AppDataSource: DataSource) {
 export function getAuthenticatedReq(app: INestApplication, userId: string) {
   const payload = { sub: userId };
   const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '2h' });
-  const agent = request(app.getHttpServer);
+  const agent = request(app.getHttpServer());
 
   return {
     get: (url: string) =>

@@ -12,7 +12,6 @@ import { User, UserType } from 'src/user/user.entity';
 import { plainToInstance } from 'class-transformer';
 import { StoreResDTO } from './dto/response/store-res.dto';
 import { StoreWithFavoriteCountDTO } from './dto/response/store-with-favorite-count.dto';
-import { FavoriteStore } from 'src/favorite-store/favorite-store.entity';
 import { PageParamDTO } from 'src/lib/commonDTO/page-param.dto';
 import { MyStoreProductDTO } from './dto/response/my-store-product.dto';
 import { MyStoreProductListDTO } from './dto/response/my-store-product-list.dto';
