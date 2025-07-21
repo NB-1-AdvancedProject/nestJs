@@ -137,6 +137,7 @@ export class ProductService {
     } finally {
       await queryRunner.release();
     }
+  }
   async productFindId(productId: string) {
     return this.productRepository.findOne({ where: { id: productId } });
   }
