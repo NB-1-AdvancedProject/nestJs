@@ -6,6 +6,7 @@ import {
   Query,
   ValidationPipe,
   Post,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { Product } from './product.entity';
@@ -14,7 +15,15 @@ import { UserId } from 'src/lib/decorators/userId.decorator';
 import { postProductInquiryDto } from './productDto';
 import { plainToInstance } from 'class-transformer';
 import { InquiryPatchResponseDto } from 'src/lib/dto/inquiryDto';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('상품 문의')
 @Controller('api/products')
 export class ProductController {
   constructor(private productService: ProductService) {}
@@ -26,9 +35,20 @@ export class ProductController {
   }
 
   @Post(':productId/inquiries')
+  @ApiOperation({
+    summary: '상품 문의 등록',
+    description: '상품에 대한 문의를 등록합니다.',
+  })
+  @ApiParam({ name: 'productId', description: '상품 ID', type: String })
+  @ApiBody({ type: postProductInquiryDto })
+  @ApiResponse({
+    status: 201,
+    description: '문의 등록 성공',
+    type: InquiryPatchResponseDto,
+  })
   async postQuiryData(
     @UserId() userId: string,
-    @Param('productId') productId: string,
+    @Param('productId', new ParseUUIDPipe()) productId: string,
     @Body(new ValidationPipe({ transform: true })) body: postProductInquiryDto,
   ): Promise<InquiryPatchResponseDto> {
     const inquiry = await this.productService.postQuiry(
@@ -37,13 +57,21 @@ export class ProductController {
       userId,
     );
 
-    return plainToInstance(InquiryPatchResponseDto, inquiry, {
-      excludeExtraneousValues: true,
-    });
+    return plainToInstance(InquiryPatchResponseDto, inquiry);
   }
 
   @Get(':productId/inquiries')
-  async quiryList(@Param('productId') productId: string) {
+  @ApiOperation({
+    summary: '상품 문의 목록 조회',
+    description: '상품에 대한 모든 문의를 조회합니다.',
+  })
+  @ApiParam({ name: 'productId', description: '상품 ID', type: String })
+  @ApiResponse({
+    status: 200,
+    description: '문의 목록 반환',
+    type: [InquiryPatchResponseDto],
+  })
+  async quiryList(@Param('productId', new ParseUUIDPipe()) productId: string) {
     return await this.productService.quiryList(productId);
   }
 }

@@ -162,8 +162,6 @@ export class ProductService {
 
     if (!inquiry || (await inquiry).length === 0) throw new NotFoundException();
 
-    return plainToInstance(InquiryPatchResponseDto, inquiry, {
-      excludeExtraneousValues: true,
-    });
+    return plainToInstance(InquiryPatchResponseDto, inquiry);
   }
 }
