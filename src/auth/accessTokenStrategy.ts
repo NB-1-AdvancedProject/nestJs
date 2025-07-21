@@ -13,7 +13,7 @@ import { Repository } from 'typeorm';
 import { CacheWithSetGetDel } from './dto/authDTO';
 
 @Injectable()
-export class AccessTokenStrategy extends PassportStrategy(Strategy) {
+export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
