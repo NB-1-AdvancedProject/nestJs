@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { Product } from './product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +11,7 @@ import { CreateProductDto, GetProductsQueryDto } from './productDto';
 import { CategoryService } from 'src/category/category.service';
 import { StoreService } from 'src/store/store.service';
 import { StockService } from 'src/stock/stock.service';
+import { PageParamDTO } from 'src/lib/commonDTO/page-param.dto';
 
 @Injectable()
 export class ProductService {
@@ -13,6 +19,7 @@ export class ProductService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly categoryService: CategoryService,
+    @Inject(forwardRef(() => StoreService))
     private readonly storeService: StoreService,
     private readonly stockService: StockService,
     private readonly dataSource: DataSource,
@@ -89,6 +96,26 @@ export class ProductService {
     qb.skip(skip).take(query.pageSize);
     return qb.getMany();
   }
+
+  async getProductsWithStocksByStoreId(
+    storeId: string,
+    pageParams: PageParamDTO,
+  ): Promise<Product[]> {
+    const { page, pageSize } = pageParams;
+    const products = await this.productRepository.find({
+      where: { store: { id: storeId } },
+      relations: ['stocks'],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
+    return products;
+  }
+
+  async countProductByStoreId(storeId: string): Promise<number> {
+    const count = await this.productRepository.countBy({ storeId });
+    return count;
+  }
+
   async createProductWithStock(data: CreateProductDto, userId: string) {
     const store = await this.storeService.getStoreByUserId(userId);
     if (!store) throw new NotFoundException('존재하지 않는 Store입니다.');

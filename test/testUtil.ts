@@ -1,4 +1,5 @@
 import * as bcrypt from 'bcrypt';
+import request from 'supertest';
 import { Grade } from '../src/grade/grade.entity';
 import { User } from '../src/user/user.entity';
 import { DataSource, DeepPartial } from 'typeorm';
@@ -17,6 +18,9 @@ import { Cart } from '../src/cart/cart.entity';
 import { CartItem } from '../src/cart-item/cart-item.entity';
 import { FavoriteStore } from '../src/favorite-store/favorite-store.entity';
 import { Alarm } from '../src/alarm/alarm.entity';
+import { INestApplication } from '@nestjs/common';
+import * as jwt from 'jsonwebtoken';
+import { JWT_SECRET } from 'src/lib/constants';
 
 async function hashingPassword(password: string) {
   return await bcrypt.hash(password, 10);
@@ -47,10 +51,11 @@ export async function seedUser(
 export async function seedStore(
   dataSource: DataSource,
   store: DeepPartial<Store>,
-) {
+): Promise<Store> {
   const storeRepo = dataSource.getRepository(Store);
-  await storeRepo.save(store);
-  return store;
+  const created = storeRepo.create(store);
+  const saved = await storeRepo.save(created);
+  return saved;
 }
 
 export async function seedProduct(
@@ -58,7 +63,8 @@ export async function seedProduct(
   product: DeepPartial<Product>,
 ) {
   const productRepo = dataSource.getRepository(Product);
-  await productRepo.save(product);
+  const saved = await productRepo.save(product);
+  return saved;
 }
 
 export async function seedCategory(
@@ -168,4 +174,23 @@ export async function seedAlarm(
 export async function clearDatabase(AppDataSource: DataSource) {
   await AppDataSource.dropDatabase();
   await AppDataSource.synchronize();
+}
+
+export function getAuthenticatedReq(app: INestApplication, userId: string) {
+  const payload = { sub: userId };
+  const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '2h' });
+  const agent = request(app.getHttpServer());
+
+  return {
+    get: (url: string) =>
+      agent.get(url).set('Authorization', `Bearer ${accessToken}`),
+    post: (url: string) =>
+      agent.post(url).set('Authorization', `Bearer ${accessToken}`),
+    put: (url: string) =>
+      agent.put(url).set('Authorization', `Bearer ${accessToken}`),
+    delete: (url: string) =>
+      agent.delete(url).set('Authorization', `Bearer ${accessToken}`),
+    patch: (url: string) =>
+      agent.patch(url).set('Authorization', `Bearer ${accessToken}`),
+  };
 }
