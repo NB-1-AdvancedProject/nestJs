@@ -8,6 +8,9 @@ import { Repository } from 'typeorm';
 import { CacheWithSetGetDel, CreateUserDto, LogInDto } from './dto/authDTO';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { JWT_REFRESH_SECRET, JWT_SECRET } from 'src/lib/constants';
+import { UserService } from 'src/user/user.service';
+import { UserRes } from 'src/user/dto/userRes.dto';
+import { Grade } from 'src/grade/grade.entity';
 
 @Injectable()
 export class AuthService {
@@ -15,11 +18,13 @@ export class AuthService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
+    @InjectRepository(Grade)
+    private gradeRepository: Repository<Grade>,
     @Inject(CACHE_MANAGER)
     private cacheManager: CacheWithSetGetDel,
   ) {}
 
-  async createUser(userCreateDto: CreateUserDto): Promise<User> {
+  async createUser(userCreateDto: CreateUserDto): Promise<UserRes> {
     const { name, password, email, type } = userCreateDto;
 
     const salt = await bcrypt.genSalt();
@@ -30,14 +35,26 @@ export class AuthService {
     if (find) {
       throw new UnauthorizedException('중복된 아이디 입니다.');
     }
+
+    const grade = await this.gradeRepository.upsert(
+      {
+        name: 'green',
+        pointRate: 1,
+        minAmount: String(100000),
+      },
+      ['id'],
+    );
+
     const user = await this.userRepository.create({
       name,
       password,
       email,
       type,
+      gradeId: grade.identifiers[0].id,
     });
 
-    return await this.userRepository.save(user);
+    const saveUser = await this.userRepository.save(user);
+    return UserService.filterSensitiveUserData(saveUser);
   }
 
   async singIn(

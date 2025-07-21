@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Inquiry } from './inquiry.entity';
-import { Repository, FindOptionsWhere } from 'typeorm';
+import { Inquiry, InquiryStatus } from './inquiry.entity';
+import { Repository, FindOptionsWhere, EntityManager } from 'typeorm';
 import {
   reqGetMyInquiryDto,
   InquiryChangeReqDto,
@@ -126,5 +126,23 @@ export class InquiryService {
     await this.inquiryRepository.delete({ id: inquiryId });
 
     return inquiry;
+  }
+
+  async inquiryFindId(inquiryId: string) {
+    return this.inquiryRepository.findOne({
+      where: { id: inquiryId },
+      relations: {
+        user: true,
+        reply: {
+          user: true,
+        },
+      },
+    });
+  }
+
+  async inquiryStatus(inquiryId: string, manager: EntityManager) {
+    return manager
+      .getRepository(Inquiry)
+      .update({ id: inquiryId }, { status: InquiryStatus.completedAnswer });
   }
 }

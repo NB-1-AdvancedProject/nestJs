@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { PageParamDTO } from 'src/lib/commonDTO/page-param.dto';
-import { Repository } from 'typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
 import { Product } from './product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GetProductsQueryDto } from './productDto';
+import { CreateProductDto, GetProductsQueryDto } from './productDto';
 import { CategoryService } from 'src/category/category.service';
+import { StoreService } from 'src/store/store.service';
+import { StockService } from 'src/stock/stock.service';
+import { PageParamDTO } from 'src/lib/commonDTO/page-param.dto';
 
 @Injectable()
 export class ProductService {
@@ -12,6 +14,9 @@ export class ProductService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly categoryService: CategoryService,
+    private readonly storeService: StoreService,
+    private readonly stockService: StockService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getProducts(query: GetProductsQueryDto): Promise<Product[]> {
@@ -85,6 +90,7 @@ export class ProductService {
     qb.skip(skip).take(query.pageSize);
     return qb.getMany();
   }
+
   async getProductsWithStocksByStoreId(
     storeId: string,
     pageParams: PageParamDTO,
@@ -100,5 +106,58 @@ export class ProductService {
   async countProductByStoreId(storeId: string): Promise<number> {
     // 정은: 머지 후 구현 예정
     throw new Error('Not implemented yet');
+  }
+
+  async createProductWithStock(data: CreateProductDto, userId: string) {
+    const store = await this.storeService.getStoreByUserId(userId);
+    if (!store) throw new NotFoundException('존재하지 않는 Store입니다.');
+
+    const category = await this.categoryService.upsertCategory(
+      data.categoryName,
+    );
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const product = this.productRepository.create({
+        name: data.name,
+        price: data.price.toString(),
+        content: data.content,
+        image: data.image,
+        discountPrice: data.discountRate
+          ? ((data.price * (100 - data.discountRate)) / 100).toString()
+          : undefined,
+        discountRate: data.discountRate || 0,
+        discountStartTime: data.discountStartTime || undefined,
+        discountEndTime: data.discountEndTime || undefined,
+        category,
+        store,
+      });
+
+      const savedProduct = await queryRunner.manager.save(product);
+      const stocks = await this.stockService.createStocksForProduct(
+        savedProduct.id,
+        data.stocks,
+        queryRunner.manager,
+      );
+      await queryRunner.commitTransaction();
+      return {
+        ...savedProduct,
+        storeId: store.id,
+        storeName: store.name,
+        category,
+        stocks,
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+  async productFindId(productId: string) {
+    return this.productRepository.findOne({ where: { id: productId } });
   }
 }

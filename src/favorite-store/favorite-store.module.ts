@@ -8,6 +8,6 @@ import { FavoriteStore } from './favorite-store.entity';
   imports: [TypeOrmModule.forFeature([FavoriteStore])],
   controllers: [FavoriteStoreController],
   providers: [FavoriteStoreService],
-  exports: [FavoriteStoreService],
+  exports: [TypeOrmModule, FavoriteStoreService],
 })
 export class FavoriteStoreModule {}
