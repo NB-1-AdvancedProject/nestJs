@@ -7,6 +7,7 @@ import {
   ValidationPipe,
   Post,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { Product } from './product.entity';
@@ -22,6 +23,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('상품 문의')
 @Controller('api/products')
@@ -34,6 +36,7 @@ export class ProductController {
     return this.productService.getProducts(query);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post(':productId/inquiries')
   @ApiOperation({
     summary: '상품 문의 등록',

@@ -1,4 +1,4 @@
-import { Body, Controller, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Patch, Post, UseGuards } from '@nestjs/common';
 import { ReplyService } from './reply.service';
 import { Get, Param } from '@nestjs/common';
 import { UserId } from 'src/lib/decorators/userId.decorator';
@@ -13,12 +13,14 @@ import {
   ApiResponse,
   ApiBody,
 } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Reply')
 @Controller('reply')
 export class ReplyController {
   constructor(private readonly replyService: ReplyService) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Get(':replyId/replies')
   @ApiOperation({ summary: '답변 상세 조회' })
   @ApiParam({ name: 'replyId', type: String, description: '답변 ID' })
@@ -38,6 +40,7 @@ export class ReplyController {
     });
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Patch(':replyId/replies')
   @ApiOperation({ summary: '답변 수정' })
   @ApiParam({ name: 'replyId', type: String, description: '답변 ID' })
@@ -64,6 +67,7 @@ export class ReplyController {
     });
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post(':inquiryId/replies')
   @ApiOperation({ summary: '답변 등록' })
   @ApiParam({ name: 'inquiryId', type: String, description: '문의 ID' })

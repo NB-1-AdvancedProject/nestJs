@@ -7,6 +7,7 @@ import {
   Patch,
   Body,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { InquiryService } from './inquiry.service';
 import {
@@ -29,12 +30,14 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Inquiry')
 @Controller('inquiry')
 export class InquiryController {
   constructor(private readonly inquiryService: InquiryService) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Get()
   @ApiOperation({ summary: '내 문의 목록 조회' })
   @ApiQuery({ name: 'page', required: false, type: Number })
@@ -63,6 +66,7 @@ export class InquiryController {
     };
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get(':inquiryId')
   @ApiOperation({ summary: '문의 상세 조회' })
   @ApiParam({ name: 'inquiryId', description: '문의 ID' })
@@ -88,6 +92,7 @@ export class InquiryController {
     });
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Patch(':inquiryId')
   @ApiOperation({ summary: '문의 수정' })
   @ApiParam({ name: 'inquiryId', description: '문의 ID' })
@@ -109,6 +114,7 @@ export class InquiryController {
     });
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':inquiryId')
   @ApiOperation({ summary: '문의 삭제' })
   @ApiParam({ name: 'inquiryId', description: '문의 ID' })
