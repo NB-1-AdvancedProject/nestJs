@@ -16,4 +16,17 @@ export class CategoryService {
       },
     });
   }
+  async upsertCategory(categoryName: string) {
+    const existingCategory = await this.categoryRepository.findOne({
+      where: {
+        name: categoryName,
+      },
+    });
+    if (existingCategory) {
+      return existingCategory;
+    }
+    return this.categoryRepository.save({
+      name: categoryName,
+    });
+  }
 }
