@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { Product } from './product.entity';
-import { GetProductsQueryDto } from './productDto';
+import { GetProductsQueryDto, CreateProductDto } from './productDto';
 import { UserId } from 'src/lib/decorators/userId.decorator';
 import { postProductInquiryDto } from './productDto';
 import { plainToInstance } from 'class-transformer';
@@ -73,5 +73,15 @@ export class ProductController {
   })
   async quiryList(@Param('productId', new ParseUUIDPipe()) productId: string) {
     return await this.productService.quiryList(productId);
+  }
+
+  @Post()
+  postProduct(
+    @Body(new ValidationPipe({ transform: true })) product: CreateProductDto,
+  ): Promise<Product> {
+    return this.productService.createProductWithStock(
+      product,
+      '00000000-0000-0000-0000-000000000001', //임시 userId
+    );
   }
 }

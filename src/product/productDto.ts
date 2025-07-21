@@ -1,12 +1,17 @@
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsArray,
+  IsDateString,
+  IsNumber,
+  ValidateNested,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { CreateStockDto } from 'src/stock/stockDto';
 
 export class GetProductsQueryDto {
   constructor(partial?: Partial<GetProductsQueryDto>) {
@@ -91,3 +96,36 @@ export class postProductInquiryDto {
 }
 
 export class postProductInquiryResponseDto {}
+export class CreateProductDto {
+  @IsString()
+  name: string;
+
+  @IsInt()
+  price: number;
+
+  @IsString()
+  content: string;
+
+  @IsString()
+  image: string;
+
+  @IsOptional()
+  @IsNumber()
+  discountRate?: number;
+
+  @IsOptional()
+  @IsDateString()
+  discountStartTime?: string;
+
+  @IsOptional()
+  @IsDateString()
+  discountEndTime?: string;
+
+  @IsString()
+  categoryName: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateStockDto)
+  stocks: CreateStockDto[];
+}

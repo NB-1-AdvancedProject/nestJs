@@ -6,15 +6,19 @@ import {
 import { DataSource, Repository } from 'typeorm';
 import { Product } from './product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GetProductsQueryDto, postProductInquiryDto } from './productDto';
+import {
+  GetProductsQueryDto,
+  postProductInquiryDto,
+  CreateProductDto,
+} from './productDto';
 import { CategoryService } from 'src/category/category.service';
 import { UserService } from 'src/user/user.service';
 import { StoreService } from 'src/store/store.service';
-import { product } from 'src/mock';
 import { InquiryService } from 'src/inquiry/inquiry.service';
 import { AlarmService } from 'src/alarm/alarm.service';
 import { InquiryPatchResponseDto } from 'src/lib/dto/inquiryDto';
 import { plainToInstance } from 'class-transformer';
+import { StockService } from 'src/stock/stock.service';
 
 @Injectable()
 export class ProductService {
@@ -27,6 +31,7 @@ export class ProductService {
     private readonly inquiryService: InquiryService,
     private readonly alarmService: AlarmService,
     private readonly dataSource: DataSource,
+    private readonly stockService: StockService,
   ) {}
 
   async getProducts(query: GetProductsQueryDto): Promise<Product[]> {
@@ -100,7 +105,55 @@ export class ProductService {
     qb.skip(skip).take(query.pageSize);
     return qb.getMany();
   }
+  async createProductWithStock(data: CreateProductDto, userId: string) {
+    const store = await this.storeService.getStoreByUserId(userId);
+    if (!store) throw new NotFoundException('존재하지 않는 Store입니다.');
 
+    const category = await this.categoryService.upsertCategory(
+      data.categoryName,
+    );
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const product = this.productRepository.create({
+        name: data.name,
+        price: data.price.toString(),
+        content: data.content,
+        image: data.image,
+        discountPrice: data.discountRate
+          ? ((data.price * (100 - data.discountRate)) / 100).toString()
+          : undefined,
+        discountRate: data.discountRate || 0,
+        discountStartTime: data.discountStartTime || undefined,
+        discountEndTime: data.discountEndTime || undefined,
+        category,
+        store,
+      });
+
+      const savedProduct = await queryRunner.manager.save(product);
+      const stocks = await this.stockService.createStocksForProduct(
+        savedProduct.id,
+        data.stocks,
+        queryRunner.manager,
+      );
+      await queryRunner.commitTransaction();
+      return {
+        ...savedProduct,
+        storeId: store.id,
+        storeName: store.name,
+        category,
+        stocks,
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
   async productFindId(productId: string) {
     return this.productRepository.findOne({ where: { id: productId } });
   }
