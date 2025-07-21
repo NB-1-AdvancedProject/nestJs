@@ -13,6 +13,8 @@ import request from 'supertest';
 // HTTP 요청을 테스트하기 위한 라이브러
 import { Server } from 'http';
 import { AddressInfo } from 'net';
+import { AuthGuard } from '@nestjs/passport';
+import { MockAuthGuard } from './mock-auth.guard';
 const { EventSource } = require('eventsource');
 //sse 테스트를 위한 핵심 모듈. 서버로부터 실시간 이벤트를 수신
 
@@ -28,22 +30,14 @@ describe('AlarmController (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideGuard(AuthGuard('jwt'))
+      .useValue(MockAuthGuard)
+      .compile();
     //테스트 전체에서 사용할 Nest 앱을 초기화함
     //AppModule을 그대로 가져오므로 실제 앱 환경과 동일하게 구성됨.
 
     app = moduleFixture.createNestApplication();
-
-    // 인증 미들웨어 mocking
-    app.use((req, _, next) => {
-      const auth = req.headers['authorization'];
-      if (auth?.startsWith('Bearer ')) {
-        const id = auth.split(' ')[1];
-        req.user = { id: userId };
-      }
-      next();
-    }); //인증 미들웨어를 mock으로 데체하여, 테스트에서도 req.user를 세팅 가능하게 함
-    // 실제 인증 없이 Authorization 헤더로 유저 ID만 넘기면 됨
 
     await app.init();
     // 실제 서버 내부 로직 초기화(미들웨어 인터셉터 파이프 )

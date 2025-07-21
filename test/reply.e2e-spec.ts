@@ -11,6 +11,8 @@ import { Store } from 'src/store/store.entity';
 import { Reply } from 'src/reply/reply.entity';
 import { Category } from 'src/category/category.entity';
 import { Alarm } from 'src/alarm/alarm.entity';
+import { MockAuthGuard } from './mock-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 describe('replyController (e2e)', () => {
   let app: INestApplication;
@@ -24,18 +26,12 @@ describe('replyController (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideGuard(AuthGuard('jwt'))
+      .useClass(MockAuthGuard)
+      .compile();
 
     app = moduleFixture.createNestApplication();
-
-    app.use((req, _, next) => {
-      const auth = req.headers['authorization'];
-      if (auth?.startsWith('Bearer ')) {
-        const id = auth.split(' ')[1];
-        req.user = { id };
-      }
-      next();
-    });
 
     await app.init();
     httpServer = app.getHttpServer();

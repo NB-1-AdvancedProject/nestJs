@@ -10,6 +10,12 @@ import { Product } from 'src/product/product.entity';
 import { Store } from 'src/store/store.entity';
 import { Reply } from 'src/reply/reply.entity';
 import { Category } from 'src/category/category.entity';
+import { MockAuthGuard } from './mock-auth.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from '@nestjs/passport';
+//APP_GUARD: NestJS에서 전역 가드를 설정할 수 있게 해주는 토큰
+//CanActivate, ExecutionContext: 커스텀 가드를 만들기 위해 필요한 기본 인터페이스와 실행
+//컨텍스트
 
 describe('inquiryController (e2e)', () => {
   let app: INestApplication;
@@ -22,19 +28,12 @@ describe('inquiryController (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideGuard(AuthGuard('jwt'))
+      .useValue(new MockAuthGuard())
+      .compile();
 
     app = moduleFixture.createNestApplication();
-
-    app.use((req, _, next) => {
-      const auth = req.headers['authorization'];
-      if (auth?.startsWith('Bearer ')) {
-        const id = auth.split(' ')[1];
-        req.user = { id: userId };
-      }
-      next();
-    });
-
     await app.init();
 
     dataSource = moduleFixture.get(DataSource);
