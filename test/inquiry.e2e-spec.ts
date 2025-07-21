@@ -10,6 +10,12 @@ import { Product } from 'src/product/product.entity';
 import { Store } from 'src/store/store.entity';
 import { Reply } from 'src/reply/reply.entity';
 import { Category } from 'src/category/category.entity';
+import { MockAuthGuard } from './mock-auth.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from '@nestjs/passport';
+//APP_GUARD: NestJS에서 전역 가드를 설정할 수 있게 해주는 토큰
+//CanActivate, ExecutionContext: 커스텀 가드를 만들기 위해 필요한 기본 인터페이스와 실행
+//컨텍스트
 
 describe('inquiryController (e2e)', () => {
   let app: INestApplication;
@@ -17,23 +23,17 @@ describe('inquiryController (e2e)', () => {
   let userId: string;
   let inquiryId: string;
   let dataSource: DataSource;
+  let productId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideGuard(AuthGuard('jwt'))
+      .useValue(new MockAuthGuard())
+      .compile();
 
     app = moduleFixture.createNestApplication();
-
-    app.use((req, _, next) => {
-      const auth = req.headers['authorization'];
-      if (auth?.startsWith('Bearer ')) {
-        const id = auth.split(' ')[1];
-        req.user = { id: userId };
-      }
-      next();
-    });
-
     await app.init();
 
     dataSource = moduleFixture.get(DataSource);
@@ -101,6 +101,7 @@ describe('inquiryController (e2e)', () => {
     });
 
     await productRepo.save(product);
+    productId = product.id;
 
     const inquiry = inquiryRepo.create({
       userId: buyerUser.id,
@@ -190,5 +191,40 @@ describe('inquiryController (e2e)', () => {
     const inquiryRepo = dataSource.getRepository(Inquiry);
     const deleted = await inquiryRepo.findOneBy({ id: inquiryId });
     expect(deleted).toBeNull();
+  });
+
+  it('POST /products/:productId/inquiries - 문의 등록', async () => {
+    const payload = {
+      title: '상품 문의 제목',
+      content: '상품 문의 내용',
+      isSecret: false,
+    };
+
+    const res = await request(httpServer)
+      .post(`/api/products/${productId}/inquiries`)
+      .set('Authorization', `Bearer ${userId}`)
+      .send(payload)
+      .expect(201);
+
+    expect(res.body).toHaveProperty('id');
+    expect(res.body.title).toBe(payload.title);
+    expect(res.body.content).toBe(payload.content);
+    expect(res.body.isSecret).toBe(payload.isSecret);
+  });
+
+  it('GET api/products/:productId/inquiries - 상품 문의 목록 조회', async () => {
+    const res = await request(httpServer)
+      .get(`/api/products/${productId}/inquiries`)
+      .set('Authorization', `Bearer ${userId}`)
+      .expect(200);
+
+    expect(Array.isArray(res.body)).toBe(true);
+    if (res.body.length > 0) {
+      const item = res.body[0];
+      expect(item).toHaveProperty('id');
+      expect(item).toHaveProperty('title');
+      expect(item).toHaveProperty('content');
+      expect(item).toHaveProperty('isSecret');
+    }
   });
 });

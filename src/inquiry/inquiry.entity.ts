@@ -37,7 +37,11 @@ export class Inquiry {
   @Column()
   isSecret: boolean;
 
-  @Column({ type: 'enum', enum: InquiryStatus })
+  @Column({
+    type: 'enum',
+    enum: InquiryStatus,
+    default: InquiryStatus.noAnswer,
+  })
   status: InquiryStatus;
 
   @CreateDateColumn()

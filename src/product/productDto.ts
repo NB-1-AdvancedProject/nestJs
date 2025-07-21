@@ -1,13 +1,16 @@
 import { Transform, Type } from 'class-transformer';
 import {
-  IsArray,
-  IsDateString,
+  IsBoolean,
   IsInt,
-  IsNumber,
+  IsNotEmpty,
   IsOptional,
   IsString,
+  IsArray,
+  IsDateString,
+  IsNumber,
   ValidateNested,
 } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 import { CreateStockDto } from 'src/stock/stockDto';
 
 export class GetProductsQueryDto {
@@ -75,6 +78,24 @@ export class GetProductsQueryDto {
   categoryName: string;
 }
 
+export class postProductInquiryDto {
+  @ApiProperty({ example: '상품 문의합니다.' })
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  @ApiProperty({ example: '문의 내용입니다.' })
+  @IsString()
+  @IsNotEmpty()
+  content: string;
+
+  @ApiProperty({ example: '문의 내용입니다.' })
+  @IsBoolean()
+  @IsNotEmpty()
+  isSecret: boolean;
+}
+
+export class postProductInquiryResponseDto {}
 export class CreateProductDto {
   @IsString()
   name: string;

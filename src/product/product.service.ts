@@ -1,10 +1,23 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { Product } from './product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateProductDto, GetProductsQueryDto } from './productDto';
+import {
+  GetProductsQueryDto,
+  postProductInquiryDto,
+  CreateProductDto,
+} from './productDto';
 import { CategoryService } from 'src/category/category.service';
+import { UserService } from 'src/user/user.service';
 import { StoreService } from 'src/store/store.service';
+import { InquiryService } from 'src/inquiry/inquiry.service';
+import { AlarmService } from 'src/alarm/alarm.service';
+import { InquiryPatchResponseDto } from 'src/lib/dto/inquiryDto';
+import { plainToInstance } from 'class-transformer';
 import { StockService } from 'src/stock/stock.service';
 
 @Injectable()
@@ -13,9 +26,12 @@ export class ProductService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly categoryService: CategoryService,
+    private readonly userService: UserService,
     private readonly storeService: StoreService,
-    private readonly stockService: StockService,
+    private readonly inquiryService: InquiryService,
+    private readonly alarmService: AlarmService,
     private readonly dataSource: DataSource,
+    private readonly stockService: StockService,
   ) {}
 
   async getProducts(query: GetProductsQueryDto): Promise<Product[]> {
@@ -140,5 +156,65 @@ export class ProductService {
   }
   async productFindId(productId: string) {
     return this.productRepository.findOne({ where: { id: productId } });
+  }
+
+  async postInquiry(
+    productId: string,
+    body: postProductInquiryDto,
+    userId: string,
+  ) {
+    const userData = await this.userService.userFindId(userId);
+
+    if (!userData) throw new NotFoundException();
+
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+    });
+
+    if (!product) throw new NotFoundException();
+
+    if (userData.storeId) {
+      const storeId = await this.storeService.storeFindId(userData.storeId);
+      if (userData.type === 'SELLER' && product.storeId === storeId?.id)
+        throw new ForbiddenException();
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    queryRunner.connect();
+    queryRunner.startTransaction();
+
+    try {
+      const quiryData = await this.inquiryService.postData(
+        productId,
+        body,
+        userId,
+        queryRunner.manager,
+      );
+
+      if (quiryData) {
+        const storeData = await this.storeService.storeFindId(product.storeId);
+        const content = '문의가 등록되었습니다.';
+        await this.alarmService.createAlarmData(
+          storeData!.userId,
+          content,
+          queryRunner.manager,
+        );
+      }
+      await queryRunner.commitTransaction();
+      return quiryData;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async quiryList(productId: string): Promise<InquiryPatchResponseDto[]> {
+    const inquiry = await this.inquiryService.listQuiries(productId);
+
+    if (!inquiry || (await inquiry).length === 0) throw new NotFoundException();
+
+    return plainToInstance(InquiryPatchResponseDto, inquiry);
   }
 }

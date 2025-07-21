@@ -11,6 +11,7 @@ import { Store } from 'src/store/store.entity';
 import { NotFoundException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { StoreService } from 'src/store/store.service';
+import { postProductInquiryDto } from 'src/product/productDto';
 
 @Injectable()
 export class InquiryService {
@@ -144,5 +145,32 @@ export class InquiryService {
     return manager
       .getRepository(Inquiry)
       .update({ id: inquiryId }, { status: InquiryStatus.completedAnswer });
+  }
+
+  async postData(
+    productId: string,
+    body: postProductInquiryDto,
+    userId: string,
+    manager: EntityManager,
+  ) {
+    return manager.getRepository(Inquiry).save({
+      productId,
+      userId,
+      ...body,
+      Status: InquiryStatus.noAnswer,
+    });
+  }
+
+  async listQuiries(productId: string) {
+    return this.inquiryRepository.find({
+      where: { productId },
+      order: { createdAt: 'DESC' },
+      relations: {
+        user: true,
+        reply: {
+          user: true,
+        },
+      },
+    });
   }
 }
