@@ -10,5 +10,6 @@ import { StoreModule } from 'src/store/store.module';
   imports: [TypeOrmModule.forFeature([Inquiry]), UserModule, StoreModule],
   controllers: [InquiryController],
   providers: [InquiryService],
+  exports: [InquiryService],
 })
 export class InquiryModule {}

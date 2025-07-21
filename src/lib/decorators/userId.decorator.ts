@@ -9,7 +9,6 @@ export const UserId = createParamDecorator(
   //함수 내부는 요청 컨텍스트에서 원하는 값을 꺼내는 로직
   (data: unknown, ctx: ExecutionContext): string => {
     const request = ctx.switchToHttp().getRequest(); //현재 요청이 http일 경우 express의 req 객체를 꺼냄
-
     if (process.env.NODE_ENV === 'test') {
       if (!request.user) {
         request.user = { id: '19fa4c6e-1e1a-4f37-ae64-d2b4dc52434f' };
